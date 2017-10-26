@@ -18,6 +18,8 @@ public:
     MySortFilterProxyModel(int columnCount, QObject *parent = 0);
     ~MySortFilterProxyModel();
 
+//    void sortFromSql(QSqlQueryModel *model);
+
 protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
     void sort(int column, Qt::SortOrder order);

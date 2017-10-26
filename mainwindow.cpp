@@ -90,11 +90,6 @@ bool MySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex
     QVariant leftData = sourceModel()->data(left);
     QVariant rightData = sourceModel()->data(right);
 
-//    const int tmp = left.column();
-//    if (actualColumns.contains(left.column()))
-//        actualColumns.removeAt(actualColumns.indexOf(tmp));
-////        qDebug() << "true";
-//    qDebug() << actualColumns;
 
     QMutableListIterator<int> it(actualColumns);
     while (it.hasNext())
@@ -103,6 +98,19 @@ bool MySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex
         if (val == left.column())
             it.remove();
     }
+
+//    while (leftData == rightData)
+//    {
+//        if (!actualColumns.isEmpty())
+//        {
+//            QModelIndex newLeft = left.sibling(left.row(),actualColumns[0]);
+//            QModelIndex newRight = right.sibling(right.row(),actualColumns[0]);
+//        }
+//        else
+//            return true;
+//    }
+
+
 
     QModelIndex newLeft = index(left.row(),actualColumns[0]);
     QModelIndex newRight = index(right.row(),actualColumns[0]);
