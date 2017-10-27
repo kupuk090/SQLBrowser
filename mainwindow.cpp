@@ -121,7 +121,6 @@ void MainWindow::on_sectionClicked(int column)
 
 
 
-
 MySortFilterProxyModel::MySortFilterProxyModel(QObject *parent)
 {
 }
