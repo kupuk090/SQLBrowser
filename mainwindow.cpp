@@ -10,6 +10,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    ui->comboSort->addItem("Sorting by SQL function");
+    ui->comboSort->addItem("Sorting by standart ProxyModel function");
+    ui->comboSort->addItem("Sorting by modified ProxyModel function");
 }
 
 MainWindow::~MainWindow()
@@ -19,7 +23,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_submitButton_clicked()
 {
-    QSqlQueryModel *model = new QSqlQueryModel(this);
+    model = new QSqlQueryModel(this);
     QString boxText = ui->comboBox->currentText();
 
     QTime timer;
@@ -30,14 +34,39 @@ void MainWindow::on_submitButton_clicked()
     else
         model->setQuery("SELECT * FROM bookings.flights_v;");
 
-//    MySortFilterProxyModel *proxyModel = new MySortFilterProxyModel(model->columnCount(),this);
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(model);
+    switch (ui->comboSort->currentIndex())
+    {
+        case 0:
+        {
+            connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
+            ui->tableView->setModel(model);
+            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
+            break;
+        }
 
-    ui->tableView->setModel(proxyModel);
+        case 1:
+        {
+            QSortFilterProxyModel *stProxyModel = new QSortFilterProxyModel(this);
+            stProxyModel->setSourceModel(model);
+            ui->tableView->setModel(stProxyModel);
+            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
+            break;
+        }
+
+        case 2:
+        {
+            MySortFilterProxyModel *myProxyModel = new MySortFilterProxyModel(this);
+            myProxyModel->setSourceModel(model);
+            ui->tableView->setModel(myProxyModel);
+            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
+            break;
+        }
+
+        default:
+            break;
+    }
+
     ui->tableView->setSortingEnabled(true);
-
-    qDebug() << timer.elapsed() << " ms";
 }
 
 void MainWindow::on_actionAdd_Connection_triggered()
@@ -74,91 +103,68 @@ void MainWindow::getOpenedDatabase(QSqlDatabase *m_db)
     }
 }
 
-MySortFilterProxyModel::MySortFilterProxyModel(int columnCount, QObject *parent)
+void MainWindow::on_sectionClicked(int column)
 {
-    for (int i = 0; i < columnCount; i++)
-        actualColumns << i;
+    QTime timer;
+    timer.start();
+
+    QString columnName = model->record().fieldName(column);
+
+    if (ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder)
+        model->setQuery("SELECT * FROM bookings.flights_v ORDER BY " + columnName + " ASC");
+    else
+        model->setQuery("SELECT * FROM bookings.flights_v ORDER BY " + columnName + " DESC");
+
+    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "заняла: "
+             << timer.elapsed() << " ms";
+}
+
+
+
+
+MySortFilterProxyModel::MySortFilterProxyModel(QObject *parent)
+{
 }
 
 MySortFilterProxyModel::~MySortFilterProxyModel()
 {
-    delete &actualColumns;
 }
 
 bool MySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
     QVariant leftData = sourceModel()->data(left);
     QVariant rightData = sourceModel()->data(right);
+    QModelIndex newLeft = left;
+    QModelIndex newRight = right;
+    int count = 0;
 
-
-    QMutableListIterator<int> it(actualColumns);
-    while (it.hasNext())
+    // проверяем не равны ли полученные данные и если равны, то переходим к сравнению по следующей колонке
+    while (sourceModel()->data(newLeft) == sourceModel()->data(newRight))
     {
-        int val = it.next();
-        if (val == left.column())
-            it.remove();
+        if (count != sourceModel()->columnCount())
+        {
+            newLeft = left.sibling(left.row(),count);
+            newRight = right.sibling(right.row(),count);
+            count++;
+        }
+        else
+            return true;
     }
-
-//    while (leftData == rightData)
-//    {
-//        if (!actualColumns.isEmpty())
-//        {
-//            QModelIndex newLeft = left.sibling(left.row(),actualColumns[0]);
-//            QModelIndex newRight = right.sibling(right.row(),actualColumns[0]);
-//        }
-//        else
-//            return true;
-//    }
-
-
-
-    QModelIndex newLeft = index(left.row(),actualColumns[0]);
-    QModelIndex newRight = index(right.row(),actualColumns[0]);
-
-//    if (leftData == rightData) лучше переписать через такое
 
     if (leftData.type() == QVariant::Int)
-    {
-        if (leftData.toInt() == rightData.toInt())
-            return lessThan(newLeft,newRight);
-        else
-            return leftData.toInt() < rightData.toInt();
-    }
+        return leftData.toInt() < rightData.toInt();
 
     if (leftData.type() == QVariant::String)
-    {
-        if (leftData.toString() == rightData.toString())
-            return lessThan(newLeft,newRight);
-        else
-            return leftData.toString() < rightData.toString();
-    }
+        return leftData.toString() < rightData.toString();
 
     if (leftData.type() == QVariant::DateTime)
-    {
-        if (leftData.toDateTime() == rightData.toDateTime())
-            return lessThan(newLeft,newRight);
-        else
-            return leftData.toDateTime() < rightData.toDateTime();
-    }
+        return leftData.toDateTime() < rightData.toDateTime();
 
     if (leftData.type() == QVariant::Date)
-    {
-        if (leftData.toDate() == rightData.toDate())
-            return lessThan(newLeft,newRight);
-        else
-            return leftData.toDate() < rightData.toDate();
-    }
+        return leftData.toDate() < rightData.toDate();
 
     if (leftData.type() == QVariant::Time)
-    {
-        if (leftData.toTime() == rightData.toTime())
-            return lessThan(newLeft,newRight);
-        else
-            return leftData.toTime() < rightData.toTime();
-    }
-
-    for (int i = 0; i < sourceModel()->columnCount(); i++)
-        actualColumns << i;
+        return leftData.toTime() < rightData.toTime();
 }
 
 void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
@@ -168,5 +174,6 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
 
     QSortFilterProxyModel::sort(column, order);
 
-    qDebug() << timer.elapsed() << " ms";
+    qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString() << "заняла: "
+             << timer.elapsed() << " ms";
 }

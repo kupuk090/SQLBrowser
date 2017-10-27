@@ -15,7 +15,7 @@ class MySortFilterProxyModel : public QSortFilterProxyModel
     Q_OBJECT
 
 public:
-    MySortFilterProxyModel(int columnCount, QObject *parent = 0);
+    MySortFilterProxyModel(QObject *parent = 0);
     ~MySortFilterProxyModel();
 
 //    void sortFromSql(QSqlQueryModel *model);
@@ -23,9 +23,6 @@ public:
 protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
     void sort(int column, Qt::SortOrder order);
-
-private:
-    mutable QList<int> actualColumns;
 };
 
 namespace Ui {
@@ -44,11 +41,13 @@ private slots:
     void on_submitButton_clicked();
     void on_actionAdd_Connection_triggered();
     void getOpenedDatabase(QSqlDatabase *m_db);
+    void on_sectionClicked(int column);
 
 private:
     Ui::MainWindow *ui;
     QSqlDatabase *db;
     DBconnection *connection;
+    QSqlQueryModel *model;
 };
 
 #endif // MAINWINDOW_H

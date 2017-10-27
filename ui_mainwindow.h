@@ -40,6 +40,7 @@ public:
     QTableView *tableView;
     QComboBox *comboBox;
     QHBoxLayout *horizontalLayout;
+    QComboBox *comboSort;
     QPushButton *submitButton;
     QPushButton *revertButton;
     QMenuBar *menuBar;
@@ -51,7 +52,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(509, 345);
+        MainWindow->resize(280, 339);
         actionAdd_Connection = new QAction(MainWindow);
         actionAdd_Connection->setObjectName(QStringLiteral("actionAdd_Connection"));
         centralWidget = new QWidget(MainWindow);
@@ -83,6 +84,11 @@ public:
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
+        comboSort = new QComboBox(centralWidget);
+        comboSort->setObjectName(QStringLiteral("comboSort"));
+
+        horizontalLayout->addWidget(comboSort);
+
         submitButton = new QPushButton(centralWidget);
         submitButton->setObjectName(QStringLiteral("submitButton"));
 
@@ -102,7 +108,7 @@ public:
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 509, 22));
+        menuBar->setGeometry(QRect(0, 0, 280, 22));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QStringLiteral("menuFile"));
         MainWindow->setMenuBar(menuBar);
