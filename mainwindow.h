@@ -8,22 +8,10 @@
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQueryModel>
 #include <QSortFilterProxyModel>
+#include <QThread>
+#include "mysortfilterproxymodel.h"
 #include "dbconnection.h"
 
-class MySortFilterProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-
-public:
-    MySortFilterProxyModel(QObject *parent = 0);
-    ~MySortFilterProxyModel();
-
-//    void sortFromSql(QSqlQueryModel *model);
-
-protected:
-    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
-    void sort(int column, Qt::SortOrder order);
-};
 
 namespace Ui {
 class MainWindow;
@@ -42,12 +30,18 @@ private slots:
     void on_actionAdd_Connection_triggered();
     void getOpenedDatabase(QSqlDatabase *m_db);
     void on_sectionClicked(int column);
+    void modelSorting(int column);
 
 private:
     Ui::MainWindow *ui;
     QSqlDatabase *db;
     DBconnection *connection;
     QSqlQueryModel *model;
+//    QThread *modelThread;
+    MySortFilterProxyModel *myProxyModel;
+
+signals:
+    void modelChanged();
 };
 
 #endif // MAINWINDOW_H

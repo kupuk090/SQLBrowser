@@ -26,11 +26,13 @@ DEFINES -= QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    dbconnection.cpp
+    dbconnection.cpp \
+    mysortfilterproxymodel.cpp
 
 HEADERS += \
         mainwindow.h \
-    dbconnection.h
+    dbconnection.h \
+    mysortfilterproxymodel.h
 
 FORMS += \
         mainwindow.ui \

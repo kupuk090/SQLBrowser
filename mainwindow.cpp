@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QTime>
 
+static const int THREAD_COUNT = QThread::idealThreadCount();
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,6 +15,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSort->addItem("Sorting by SQL function");
     ui->comboSort->addItem("Sorting by standart ProxyModel function");
     ui->comboSort->addItem("Sorting by modified ProxyModel function");
+    ui->comboSort->addItem("Sorting by standart Model function");
+
+    model = new QSqlQueryModel();
+//    modelThread = new QThread(this);
+//    connect(this, SIGNAL(destroyed()), modelThread, SLOT(quit()));
+//    model->moveToThread(modelThread);
+
+    myProxyModel = new MySortFilterProxyModel(this);
+    connect(this, SIGNAL(modelChanged()), myProxyModel, SLOT(revertList()));
 }
 
 MainWindow::~MainWindow()
@@ -23,21 +33,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_submitButton_clicked()
 {
-    model = new QSqlQueryModel(this);
     QString boxText = ui->comboBox->currentText();
 
     QTime timer;
     timer.start();
 
     if (boxText != "test")
-        model->setQuery("SELECT * FROM " + boxText + ";");
+        model->setQuery("SELECT * FROM " + boxText);
     else
-        model->setQuery("SELECT * FROM bookings.flights_v;");
+        model->setQuery("SELECT * FROM bookings.flights_v");
 
     switch (ui->comboSort->currentIndex())
     {
         case 0:
         {
+            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             ui->tableView->setModel(model);
             qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
@@ -47,6 +57,7 @@ void MainWindow::on_submitButton_clicked()
         case 1:
         {
             QSortFilterProxyModel *stProxyModel = new QSortFilterProxyModel(this);
+            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             stProxyModel->setSourceModel(model);
             ui->tableView->setModel(stProxyModel);
             qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
@@ -55,9 +66,20 @@ void MainWindow::on_submitButton_clicked()
 
         case 2:
         {
-            MySortFilterProxyModel *myProxyModel = new MySortFilterProxyModel(this);
+//            MySortFilterProxyModel *myProxyModel = new MySortFilterProxyModel(this);
+            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             myProxyModel->setSourceModel(model);
             ui->tableView->setModel(myProxyModel);
+            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
+            break;
+        }
+
+        case 3:
+        {
+            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
+            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(modelSorting(int)));
+            connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(modelSorting(int)));
+            ui->tableView->setModel(model);
             qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
             break;
         }
@@ -83,7 +105,7 @@ void MainWindow::getOpenedDatabase(QSqlDatabase *m_db)
     delete(connection);
 
     QSqlQuery query = QSqlQuery(*db);
-    if (!query.exec("SELECT DISTINCT * FROM pg_tables WHERE tablename !~'^pg' AND tablename !~'^sql';"))
+    if (!query.exec("SELECT DISTINCT * FROM pg_tables WHERE tablename !~'^pg' AND tablename !~'^sql'"))
     {
         QMessageBox::warning(this, tr("Error"), tr("An error occurred while "
                                    "trying to execute a database query: ") + query.lastError().text());
@@ -109,70 +131,32 @@ void MainWindow::on_sectionClicked(int column)
     timer.start();
 
     QString columnName = model->record().fieldName(column);
+    QString lastQueryText = model->query().lastQuery() + " ORDER BY ";
+    QString queryText = lastQueryText.remove(lastQueryText.indexOf(" ORDER BY "),lastQueryText.length()-lastQueryText.indexOf(" ORDER BY "));
 
-    if (ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder)
-        model->setQuery("SELECT * FROM bookings.flights_v ORDER BY " + columnName + " ASC");
-    else
-        model->setQuery("SELECT * FROM bookings.flights_v ORDER BY " + columnName + " DESC");
+//    if (ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder)
+//        model->setQuery(queryText + " ORDER BY " + columnName + " ASC");
+//    else
+//        model->setQuery(queryText + " ORDER BY " + columnName + " DESC");
 
-    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "заняла: "
-             << timer.elapsed() << " ms";
+    model->setQuery(queryText + QString(" ORDER BY %1 %2").arg(columnName)
+                    .arg(ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder?"ASC":"DESC"));
+
+    //qDebug() << model->lastError().text();
+
+    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
 }
 
-
-
-MySortFilterProxyModel::MySortFilterProxyModel(QObject *parent)
-{
-}
-
-MySortFilterProxyModel::~MySortFilterProxyModel()
-{
-}
-
-bool MySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    QVariant leftData = sourceModel()->data(left);
-    QVariant rightData = sourceModel()->data(right);
-    QModelIndex newLeft = left;
-    QModelIndex newRight = right;
-    int count = 0;
-
-    // проверяем не равны ли полученные данные и если равны, то переходим к сравнению по следующей колонке
-    while (sourceModel()->data(newLeft) == sourceModel()->data(newRight))
-    {
-        if (count != sourceModel()->columnCount())
-        {
-            newLeft = left.sibling(left.row(),count);
-            newRight = right.sibling(right.row(),count);
-            count++;
-        }
-        else
-            return true;
-    }
-
-    if (leftData.type() == QVariant::Int)
-        return leftData.toInt() < rightData.toInt();
-
-    if (leftData.type() == QVariant::String)
-        return leftData.toString() < rightData.toString();
-
-    if (leftData.type() == QVariant::DateTime)
-        return leftData.toDateTime() < rightData.toDateTime();
-
-    if (leftData.type() == QVariant::Date)
-        return leftData.toDate() < rightData.toDate();
-
-    if (leftData.type() == QVariant::Time)
-        return leftData.toTime() < rightData.toTime();
-}
-
-void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
+void MainWindow::modelSorting(int column)
 {
     QTime timer;
     timer.start();
 
-    QSortFilterProxyModel::sort(column, order);
+    // в QSqlQueryModel стандартной функции сортировки не имеется, зато она имеется в QSqlTableModel
+    // но в нём, похоже она реализована в виде SQL-запросов к бд
+    //model->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
 
-    qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString() << "заняла: "
-             << timer.elapsed() << " ms";
+    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
 }
