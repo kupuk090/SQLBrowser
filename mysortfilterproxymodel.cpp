@@ -6,7 +6,7 @@
 MySortFilterProxyModel::MySortFilterProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
 {
     sortedList = new QList<int>();
-    connect(this, SIGNAL(sourceModelChanged()), this, SLOT(revertList()));
+    connect(this, SIGNAL(modelReset()), this, SLOT(revertList()));
 }
 
 MySortFilterProxyModel::~MySortFilterProxyModel()
@@ -59,6 +59,7 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     timer.start();
 
     setSortedList(column, order);
+    // возможно здесь надо испустить сингал об изменении данных
     qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString()
              << "в направлении" << order << "заняла: " << timer.elapsed() << "ms";
 }
@@ -73,7 +74,10 @@ QModelIndex MySortFilterProxyModel::mapFromSource(const QModelIndex &sourceIndex
         if (sortedList->isEmpty())
             return QSortFilterProxyModel::mapFromSource(sourceIndex);
         else
-            return createIndex(sortedList->indexOf(sourceIndex.row()),sourceIndex.column(),sourceIndex.internalPointer());
+        {
+            emit updateTable();
+            return createIndex(sortedList->indexOf(sourceIndex.row()),sourceIndex.column());
+        }
     }
 }
 
@@ -87,8 +91,19 @@ QModelIndex MySortFilterProxyModel::mapToSource(const QModelIndex &proxyIndex) c
         if (sortedList->isEmpty())
             return QSortFilterProxyModel::mapToSource(proxyIndex);
         else
-            return createIndex(sortedList->at(proxyIndex.row()),proxyIndex.column(),sourceModel());
+        {
+            emit updateTable();
+            return createIndex(sortedList->at(proxyIndex.row()),proxyIndex.column());
+        }
     }
+}
+
+Qt::ItemFlags MySortFilterProxyModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::NoItemFlags;
+    else
+        return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)

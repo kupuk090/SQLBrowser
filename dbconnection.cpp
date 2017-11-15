@@ -12,6 +12,7 @@ DBconnection::DBconnection(QWidget *parent) :
     QStringList drivers = QSqlDatabase::drivers();
     ui->comboBox->addItems(drivers);
     ui->comboBox->setCurrentText("QPSQL");
+    ui->checkBox->setChecked(true);
 }
 
 DBconnection::~DBconnection()

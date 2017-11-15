@@ -15,15 +15,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSort->addItem("Sorting by SQL function");
     ui->comboSort->addItem("Sorting by standart ProxyModel function");
     ui->comboSort->addItem("Sorting by modified ProxyModel function");
-    ui->comboSort->addItem("Sorting by standart Model function");
 
     model = new QSqlQueryModel();
+    myProxyModel = new MySortFilterProxyModel(this);
+
+    connect(myProxyModel, SIGNAL(updateTable()), ui->tableView, SLOT(reset()));
+
 //    modelThread = new QThread(this);
 //    connect(this, SIGNAL(destroyed()), modelThread, SLOT(quit()));
 //    model->moveToThread(modelThread);
-
-    myProxyModel = new MySortFilterProxyModel(this);
-    connect(this, SIGNAL(modelChanged()), myProxyModel, SLOT(revertList()));
 }
 
 MainWindow::~MainWindow()
@@ -66,20 +66,9 @@ void MainWindow::on_submitButton_clicked()
 
         case 2:
         {
-//            MySortFilterProxyModel *myProxyModel = new MySortFilterProxyModel(this);
             disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             myProxyModel->setSourceModel(model);
             ui->tableView->setModel(myProxyModel);
-            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
-            break;
-        }
-
-        case 3:
-        {
-            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
-            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(modelSorting(int)));
-            connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(modelSorting(int)));
-            ui->tableView->setModel(model);
             qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
             break;
         }
@@ -96,6 +85,7 @@ void MainWindow::on_actionAdd_Connection_triggered()
     connection = new DBconnection();
 
     connect(connection, SIGNAL(dbCorrectlyOpen(QSqlDatabase*)), this, SLOT(getOpenedDatabase(QSqlDatabase*)));
+    connection->move(0,0);
     connection->show();
 }
 
