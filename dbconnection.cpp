@@ -2,8 +2,8 @@
 #include "ui_dbconnection.h"
 #include <QDebug>
 
-DBconnection::DBconnection(QWidget *parent) :
-    QWidget(parent),
+DBconnection::DBconnection(QDialog *parent) :
+    QDialog(parent),
     ui(new Ui::DBconnection)
 {
     ui->setupUi(this);
@@ -71,6 +71,7 @@ void DBconnection::on_submitButton_clicked()
         emit dbCorrectlyOpen(db);
         qDebug() << "сигнал испущен";
     }
+
     return;
 }
 

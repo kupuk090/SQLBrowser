@@ -1,7 +1,7 @@
 #ifndef DBCONNECTION_H
 #define DBCONNECTION_H
 
-#include <QWidget>
+#include <QDialog>
 #include <QString>
 #include <QStringList>
 #include <QMessageBox>
@@ -12,12 +12,12 @@ namespace Ui {
 class DBconnection;
 }
 
-class DBconnection : public QWidget
+class DBconnection : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit DBconnection(QWidget *parent = 0);
+    explicit DBconnection(QDialog *parent = 0);
     ~DBconnection();
     int defaultPort(QString driver);
     QSqlError addConnection(QSqlDatabase *db);

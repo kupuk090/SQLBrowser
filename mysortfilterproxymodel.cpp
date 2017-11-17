@@ -13,55 +13,14 @@ MySortFilterProxyModel::~MySortFilterProxyModel()
 {
 }
 
-bool MySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    QVariant leftData = sourceModel()->data(left);
-    QVariant rightData = sourceModel()->data(right);
-    QModelIndex newLeft = left;
-    QModelIndex newRight = right;
-    int count = 0;
-
-    // проверяем не равны ли полученные данные и если равны, то переходим к сравнению по следующей колонке
-    while (sourceModel()->data(newLeft) == sourceModel()->data(newRight))
-    {
-        if (count != sourceModel()->columnCount())
-        {
-            newLeft = left.sibling(left.row(),count);
-            newRight = right.sibling(right.row(),count);
-            count++;
-        }
-        else
-            return true;
-    }
-    count = 0;
-
-    if (leftData.type() == QVariant::Int)
-        return leftData.toInt() < rightData.toInt();
-
-    if (leftData.type() == QVariant::String)
-        return leftData.toString() < rightData.toString();
-
-    if (leftData.type() == QVariant::DateTime)
-        return leftData.toDateTime() < rightData.toDateTime();
-
-    if (leftData.type() == QVariant::Date)
-        return leftData.toDate() < rightData.toDate();
-
-    if (leftData.type() == QVariant::Time)
-        return leftData.toTime() < rightData.toTime();
-
-    return false;
-}
-
 void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
 {
     QTime timer;
     timer.start();
 
     setSortedList(column, order);
-    // возможно здесь надо испустить сингал об изменении данных
-    qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString()
-             << "в направлении" << order << "заняла: " << timer.elapsed() << "ms";
+//    qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString()
+//             << "в направлении" << order << "заняла: " << timer.elapsed() << "ms";
 }
 
 //вернуть индекс прокси модели который соответствует индексу исходной модели
@@ -74,10 +33,7 @@ QModelIndex MySortFilterProxyModel::mapFromSource(const QModelIndex &sourceIndex
         if (sortedList->isEmpty())
             return QSortFilterProxyModel::mapFromSource(sourceIndex);
         else
-        {
-            emit updateTable();
             return createIndex(sortedList->indexOf(sourceIndex.row()),sourceIndex.column());
-        }
     }
 }
 
@@ -91,10 +47,7 @@ QModelIndex MySortFilterProxyModel::mapToSource(const QModelIndex &proxyIndex) c
         if (sortedList->isEmpty())
             return QSortFilterProxyModel::mapToSource(proxyIndex);
         else
-        {
-            emit updateTable();
             return createIndex(sortedList->at(proxyIndex.row()),proxyIndex.column());
-        }
     }
 }
 

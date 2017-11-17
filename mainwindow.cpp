@@ -4,7 +4,9 @@
 #include <QDebug>
 #include <QTime>
 
-static const int THREAD_COUNT = QThread::idealThreadCount();
+//static const int THREAD_COUNT = QThread::idealThreadCount();
+QTime sortingTimer;
+int tmp = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -12,23 +14,39 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    hideFlag = true;
     ui->comboSort->addItem("Sorting by SQL function");
     ui->comboSort->addItem("Sorting by standart ProxyModel function");
     ui->comboSort->addItem("Sorting by modified ProxyModel function");
 
-    model = new QSqlQueryModel();
+    model = new QSqlQueryModel(this);
+    stProxyModel = new QSortFilterProxyModel(this);
     myProxyModel = new MySortFilterProxyModel(this);
 
-    connect(myProxyModel, SIGNAL(updateTable()), ui->tableView, SLOT(reset()));
-
-//    modelThread = new QThread(this);
-//    connect(this, SIGNAL(destroyed()), modelThread, SLOT(quit()));
-//    model->moveToThread(modelThread);
+    // connections
+    connect(stProxyModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)), this, SLOT(on_stProxyModel_reset(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
+    connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
 }
 
 MainWindow::~MainWindow()
 {
+//    delete model;
+//    delete stProxyModel;
+//    delete myProxyModel;
+//    delete db;
+//    delete connection;
     delete ui;
+}
+
+void MainWindow::sortBySQL(int column)
+{
+    QString columnName = model->record().fieldName(column);
+    QString lastQueryText = model->query().lastQuery() + " ORDER BY ";
+    QString queryText = lastQueryText.remove(lastQueryText.indexOf(" ORDER BY "),lastQueryText.length()-lastQueryText.indexOf(" ORDER BY "));
+
+    model->setQuery(queryText + QString(" ORDER BY %1 %2").arg(columnName)
+                    .arg(ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder?"ASC":"DESC"));
+
 }
 
 void MainWindow::on_submitButton_clicked()
@@ -43,50 +61,41 @@ void MainWindow::on_submitButton_clicked()
     else
         model->setQuery("SELECT * FROM bookings.flights_v");
 
-    switch (ui->comboSort->currentIndex())
+    choice = ui->comboSort->currentIndex();
+    switch (choice)
     {
         case 0:
-        {
-            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
-            connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             ui->tableView->setModel(model);
-            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
             break;
-        }
 
         case 1:
-        {
-            QSortFilterProxyModel *stProxyModel = new QSortFilterProxyModel(this);
-            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             stProxyModel->setSourceModel(model);
             ui->tableView->setModel(stProxyModel);
-            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
             break;
-        }
 
         case 2:
-        {
-            disconnect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
             myProxyModel->setSourceModel(model);
             ui->tableView->setModel(myProxyModel);
-            qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
             break;
-        }
 
         default:
             break;
     }
 
+    qDebug() << "Построение и установка модели: " << timer.elapsed() << " ms";
     ui->tableView->setSortingEnabled(true);
 }
 
 void MainWindow::on_actionAdd_Connection_triggered()
 {
     connection = new DBconnection();
-
     connect(connection, SIGNAL(dbCorrectlyOpen(QSqlDatabase*)), this, SLOT(getOpenedDatabase(QSqlDatabase*)));
-    connection->move(0,0);
-    connection->show();
+
+    if (connection)
+    {
+        connection->move(this->pos());
+        connection->show();
+    }
 }
 
 void MainWindow::getOpenedDatabase(QSqlDatabase *m_db)
@@ -116,37 +125,52 @@ void MainWindow::getOpenedDatabase(QSqlDatabase *m_db)
 }
 
 void MainWindow::on_sectionClicked(int column)
-{
+{  
     QTime timer;
     timer.start();
+    sortingTimer.restart();
 
-    QString columnName = model->record().fieldName(column);
-    QString lastQueryText = model->query().lastQuery() + " ORDER BY ";
-    QString queryText = lastQueryText.remove(lastQueryText.indexOf(" ORDER BY "),lastQueryText.length()-lastQueryText.indexOf(" ORDER BY "));
+    switch (choice)
+    {
+        case 0:
+            sortBySQL(column);
+            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                        ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
+            break;
 
-//    if (ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder)
-//        model->setQuery(queryText + " ORDER BY " + columnName + " ASC");
-//    else
-//        model->setQuery(queryText + " ORDER BY " + columnName + " DESC");
+        case 1:
+            stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            break;
 
-    model->setQuery(queryText + QString(" ORDER BY %1 %2").arg(columnName)
-                    .arg(ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder?"ASC":"DESC"));
+        case 2:
+            myProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                        ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
+            break;
 
-    //qDebug() << model->lastError().text();
+        default:
+            break;
+    }
 
-    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
-                ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
+    ui->tableView->reset();
+    ui->tableView->verticalHeader()->reset();
 }
 
-void MainWindow::modelSorting(int column)
+void MainWindow::on_actionHide_vertical_headers_triggered()
 {
-    QTime timer;
-    timer.start();
+    hideFlag = !hideFlag;
+    ui->tableView->verticalHeader()->setHidden(hideFlag);
+}
 
-    // в QSqlQueryModel стандартной функции сортировки не имеется, зато она имеется в QSqlTableModel
-    // но в нём, похоже она реализована в виде SQL-запросов к бд
-    //model->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+void MainWindow::on_revertButton_clicked()
+{
+    model->clear();
+    ui->tableView->setModel(NULL);
+}
 
-    qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
-                ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
+void MainWindow::on_stProxyModel_reset(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)
+{
+    // как-то надо это подогнать под свою задачу (засечь время для стандартной модели)
+    qDebug() << "Сортировка" << "в направлении" << ui->tableView->horizontalHeader()->sortIndicatorOrder()
+             << "заняла: " << sortingTimer.elapsed() << "ms";
 }
