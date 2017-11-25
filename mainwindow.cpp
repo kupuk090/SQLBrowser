@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
     myProxyModel = new MySortFilterProxyModel(this);
 
     // connections
-    connect(stProxyModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)), this, SLOT(on_stProxyModel_reset(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
+//    connect(stProxyModel, SIGNAL(), this, SLOT(on_stProxyModel_reset()));
     connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
 }
 
@@ -139,11 +139,14 @@ void MainWindow::on_sectionClicked(int column)
             break;
 
         case 1:
-            stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            ui->tableView->sortByColumn(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                        ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
         case 2:
             myProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            myProxyModel->invalidate();
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
@@ -152,7 +155,7 @@ void MainWindow::on_sectionClicked(int column)
             break;
     }
 
-    ui->tableView->reset();
+//    ui->tableView->reset();
     ui->tableView->verticalHeader()->reset();
 }
 
@@ -168,7 +171,7 @@ void MainWindow::on_revertButton_clicked()
     ui->tableView->setModel(NULL);
 }
 
-void MainWindow::on_stProxyModel_reset(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)
+void MainWindow::on_stProxyModel_reset()
 {
     // как-то надо это подогнать под свою задачу (засечь время для стандартной модели)
     qDebug() << "Сортировка" << "в направлении" << ui->tableView->horizontalHeader()->sortIndicatorOrder()

@@ -2,9 +2,12 @@
 #define MYSORTFILTERPROXYMODEL_H
 
 #include <QVariant>
+#include <QHash>
+#include <QMultiHash>
 #include <QtSql/QtSql>
 #include <QtSql/QSqlQuery>
 #include <QSortFilterProxyModel>
+#include "sortings.h"
 
 class MySortFilterProxyModel : public QSortFilterProxyModel
 {
@@ -15,6 +18,7 @@ public:
     ~MySortFilterProxyModel();
     void setSortedList(int column, Qt::SortOrder order);
     void sort(int column, Qt::SortOrder order);
+    void magic(int column, Qt::SortOrder order);
 
 protected:
     QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;

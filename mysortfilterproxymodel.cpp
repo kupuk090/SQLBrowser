@@ -18,12 +18,32 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     QTime timer;
     timer.start();
 
-    setSortedList(column, order);
-//    qDebug() << "Сортировка по столбцу" << sourceModel()->headerData(column, Qt::Horizontal).toString()
-//             << "в направлении" << order << "заняла: " << timer.elapsed() << "ms";
+//    setSortedList(column, order);
+    magic(column, order);
 }
 
-//вернуть индекс прокси модели который соответствует индексу исходной модели
+void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
+{
+    MagicContainer currentItem;
+    QVector<MagicContainer> *dataColumn = new QVector<MagicContainer>();
+    QVariant currentValue;
+    int currentRow;
+
+    for (int i=0; i<sourceModel()->rowCount(); i++)
+    {
+        currentValue = sourceModel()->data(sourceModel()->index(i,column));
+        currentRow = i;
+        currentItem.m_key = currentValue;
+        currentItem.m_value = currentRow;
+        dataColumn->append(currentItem);
+    }
+
+    quickSort(dataColumn);
+    if (order == Qt::DescendingOrder)
+        std::reverse(sortedList->begin(),sortedList->end());
+}
+
+// вернуть индекс прокси модели который соответствует индексу исходной модели
 QModelIndex MySortFilterProxyModel::mapFromSource(const QModelIndex &sourceIndex) const
 {
     if (!sourceIndex.isValid())
@@ -37,7 +57,7 @@ QModelIndex MySortFilterProxyModel::mapFromSource(const QModelIndex &sourceIndex
     }
 }
 
-//вернуть индекс исходной модели который соответствует индексу прокси модели
+// вернуть индекс исходной модели который соответствует индексу прокси модели
 QModelIndex MySortFilterProxyModel::mapToSource(const QModelIndex &proxyIndex) const
 {
     if (!proxyIndex.isValid())
@@ -64,6 +84,7 @@ void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
     QMultiMap<QVariant, int> *sortedColumn = new QMultiMap<QVariant, int>();
     QVariant currentValue;
     int currentRow;
+
     for (int i=0; i<sourceModel()->rowCount(); i++)
     {
         currentValue = sourceModel()->data(sourceModel()->index(i,column));

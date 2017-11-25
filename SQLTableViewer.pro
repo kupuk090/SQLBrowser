@@ -27,12 +27,14 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     dbconnection.cpp \
-    mysortfilterproxymodel.cpp
+    mysortfilterproxymodel.cpp \
+    sortings.cpp
 
 HEADERS += \
         mainwindow.h \
     dbconnection.h \
-    mysortfilterproxymodel.h
+    mysortfilterproxymodel.h \
+    sortings.h
 
 FORMS += \
         mainwindow.ui \

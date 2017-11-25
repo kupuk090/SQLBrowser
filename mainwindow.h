@@ -32,7 +32,7 @@ private slots:
     void on_sectionClicked(int column);
     void on_actionHide_vertical_headers_triggered();
     void on_revertButton_clicked();
-    void on_stProxyModel_reset(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint);
+    void on_stProxyModel_reset();
 
 private:
     Ui::MainWindow *ui;
