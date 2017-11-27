@@ -24,17 +24,24 @@ MainWindow::MainWindow(QWidget *parent) :
     myProxyModel = new MySortFilterProxyModel(this);
 
     // connections
-//    connect(stProxyModel, SIGNAL(), this, SLOT(on_stProxyModel_reset()));
     connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
+    connect(this, SIGNAL(sortChoiceChanged(MySortingMethods)), myProxyModel, SLOT(giveSortChoice(MySortingMethods)));
+
+    // actionGroup in menu
+    QActionGroup *actionGroup = new QActionGroup(ui->menuSortings);
+
+    actionGroup->addAction(ui->actionQMap);
+    actionGroup->addAction(ui->actionquickSort);
+    actionGroup->addAction(ui->actionheapSort);
+    actionGroup->addAction(ui->actionstableSort);
+    actionGroup->setExclusive(true);
+    sortChoice = QtMap;
+    emit sortChoiceChanged(sortChoice);
+    ui->menuSortings->addActions(actionGroup->actions());
 }
 
 MainWindow::~MainWindow()
 {
-//    delete model;
-//    delete stProxyModel;
-//    delete myProxyModel;
-//    delete db;
-//    delete connection;
     delete ui;
 }
 
@@ -61,19 +68,19 @@ void MainWindow::on_submitButton_clicked()
     else
         model->setQuery("SELECT * FROM bookings.flights_v");
 
-    choice = ui->comboSort->currentIndex();
+    choice = static_cast<SortingMethods>(ui->comboSort->currentIndex());
     switch (choice)
     {
-        case 0:
+        case SQL:
             ui->tableView->setModel(model);
             break;
 
-        case 1:
+        case StandartModel:
             stProxyModel->setSourceModel(model);
             ui->tableView->setModel(stProxyModel);
             break;
 
-        case 2:
+        case MyModel:
             myProxyModel->setSourceModel(model);
             ui->tableView->setModel(myProxyModel);
             break;
@@ -132,21 +139,21 @@ void MainWindow::on_sectionClicked(int column)
 
     switch (choice)
     {
-        case 0:
+        case SQL:
             sortBySQL(column);
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
-        case 1:
+        case StandartModel:
             ui->tableView->sortByColumn(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
-        case 2:
+        case MyModel:
             myProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
-            myProxyModel->invalidate();
+//            myProxyModel->invalidate();
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
@@ -155,7 +162,7 @@ void MainWindow::on_sectionClicked(int column)
             break;
     }
 
-//    ui->tableView->reset();
+    ui->tableView->reset();
     ui->tableView->verticalHeader()->reset();
 }
 
@@ -171,9 +178,26 @@ void MainWindow::on_revertButton_clicked()
     ui->tableView->setModel(NULL);
 }
 
-void MainWindow::on_stProxyModel_reset()
+void MainWindow::on_actionQMap_triggered()
 {
-    // как-то надо это подогнать под свою задачу (засечь время для стандартной модели)
-    qDebug() << "Сортировка" << "в направлении" << ui->tableView->horizontalHeader()->sortIndicatorOrder()
-             << "заняла: " << sortingTimer.elapsed() << "ms";
+    sortChoice = QtMap;
+    emit sortChoiceChanged(sortChoice);
+}
+
+void MainWindow::on_actionquickSort_triggered()
+{
+    sortChoice = QuickSort;
+    emit sortChoiceChanged(sortChoice);
+}
+
+void MainWindow::on_actionheapSort_triggered()
+{
+    sortChoice = HeapSort;
+    emit sortChoiceChanged(sortChoice);
+}
+
+void MainWindow::on_actionstableSort_triggered()
+{
+    sortChoice = StableSort;
+    emit sortChoiceChanged(sortChoice);
 }

@@ -9,6 +9,9 @@
 #include <QSortFilterProxyModel>
 #include "sortings.h"
 
+
+enum MySortingMethods { QtMap, QuickSort, HeapSort, StableSort };
+
 class MySortFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -27,9 +30,11 @@ protected:
 
 private:
     QList<int> *sortedList;
+    MySortingMethods choice;
 
 public slots:
     void revertList();
+    void giveSortChoice(MySortingMethods ch);
 };
 
 #endif // MYSORTFILTERPROXYMODEL_H

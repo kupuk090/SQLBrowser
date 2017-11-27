@@ -18,8 +18,34 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     QTime timer;
     timer.start();
 
-//    setSortedList(column, order);
-    magic(column, order);
+    switch (choice)
+    {
+        case QtMap:
+            setSortedList(column, order);
+            break;
+
+        default:
+            magic(column, order);
+            break;
+    }
+}
+
+void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
+{
+    QMultiMap<QVariant, int> *sortedColumn = new QMultiMap<QVariant, int>();
+    QVariant currentValue;
+    int currentRow;
+
+    for (int i=0; i<sourceModel()->rowCount(); i++)
+    {
+        currentValue = sourceModel()->data(sourceModel()->index(i,column));
+        currentRow = i;
+        sortedColumn->insert(currentValue, currentRow);
+    }
+
+    *sortedList = sortedColumn->values();
+    if (order == Qt::DescendingOrder)
+        std::reverse(sortedList->begin(),sortedList->end());
 }
 
 void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
@@ -38,7 +64,25 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
         dataColumn->append(currentItem);
     }
 
-    quickSort(dataColumn);
+    switch (choice)
+    {
+        case QuickSort:
+            quickSort(dataColumn);
+            break;
+
+        case HeapSort:
+            heapSort(dataColumn);
+            break;
+
+        case StableSort:
+            stableSort(dataColumn);
+            break;
+
+        default:
+            break;
+    }
+
+    *sortedList = values(*dataColumn);
     if (order == Qt::DescendingOrder)
         std::reverse(sortedList->begin(),sortedList->end());
 }
@@ -79,25 +123,12 @@ Qt::ItemFlags MySortFilterProxyModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
-{
-    QMultiMap<QVariant, int> *sortedColumn = new QMultiMap<QVariant, int>();
-    QVariant currentValue;
-    int currentRow;
-
-    for (int i=0; i<sourceModel()->rowCount(); i++)
-    {
-        currentValue = sourceModel()->data(sourceModel()->index(i,column));
-        currentRow = i;
-        sortedColumn->insert(currentValue, currentRow);
-    }
-
-    *sortedList = sortedColumn->values();
-    if (order == Qt::DescendingOrder)
-        std::reverse(sortedList->begin(),sortedList->end());
-}
-
 void MySortFilterProxyModel::revertList()
 {
     sortedList->clear();
+}
+
+void MySortFilterProxyModel::giveSortChoice(MySortingMethods ch)
+{
+    choice = ch;
 }

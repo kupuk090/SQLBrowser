@@ -12,37 +12,43 @@ MagicContainer setData(QVariant key, int value)
 
 MagicContainer setData(MagicContainer cont)
 {
-    setData(cont.m_key, cont.m_value);
-}
-
-void swap1(MagicContainer &left, MagicContainer &right)
-{
-    MagicContainer tmp(setData(left));
-
-    left = setData(right);
-    right = setData(tmp);
-}
-
-void quickSort(QVector<MagicContainer> *arr, int first, int last)
-{
-    int left = first, right = last;
-    QVariant middle = arr->at((left+right)/2).m_key;
-    while (left <= right)
-    {
-        while (arr->at(left).m_key < middle)
-            left++;
-        while (arr->at(right).m_key > middle)
-            right--;
-        if (left <= right)
-            swap1(arr->at(left++), arr->at(right--));
-    }
-    if (first < right)
-        quickSort(arr, first, right);
-    if (last > left)
-        quickSort(arr, left, last);
+    return setData(cont.m_key, cont.m_value);
 }
 
 void quickSort(QVector<MagicContainer> *arr)
 {
-    quickSort(arr, 0, arr->size()-1);
+    qSort(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void heapSort(QVector<MagicContainer> *arr)
+{
+    std::make_heap(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+    std::sort_heap(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void stableSort(QVector<MagicContainer> *arr)
+{
+    std::stable_sort(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+QList<int> values(QVector<MagicContainer> cont)
+{
+    QList<int> *tmp = new QList<int>();
+
+    for (auto& i : cont)
+        tmp->append(i.m_value);
+
+    return *tmp;
 }

@@ -3,6 +3,7 @@
 
 #include <QVector>
 #include <QVariant>
+#include <QtAlgorithms>
 
 
 typedef struct MagicContainer
@@ -11,10 +12,12 @@ typedef struct MagicContainer
     int m_value;
 } MagicContainer;
 
+QList<int> values(QVector<MagicContainer> cont);
+
 MagicContainer setData(QVariant key, int value);
 MagicContainer setData(MagicContainer cont);
-void swap1(MagicContainer &left, MagicContainer &right);
-void quickSort(QVector<MagicContainer> *arr, int first, int last);
 void quickSort(QVector<MagicContainer> *arr);
+void heapSort(QVector<MagicContainer> *arr);
+void stableSort(QVector<MagicContainer> *arr);
 
 #endif // SORTINGS_H

@@ -87,8 +87,18 @@
     </property>
     <addaction name="actionHide_vertical_headers"/>
    </widget>
+   <widget class="QMenu" name="menuSortings">
+    <property name="title">
+     <string>&amp;Sortings</string>
+    </property>
+    <addaction name="actionQMap"/>
+    <addaction name="actionquickSort"/>
+    <addaction name="actionheapSort"/>
+    <addaction name="actionstableSort"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuProperties"/>
+   <addaction name="menuSortings"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -113,6 +123,41 @@
    </property>
    <property name="text">
     <string>&amp;Hide vertical headers</string>
+   </property>
+  </action>
+  <action name="actionQMap">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>QMap</string>
+   </property>
+  </action>
+  <action name="actionquickSort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Quick Sort</string>
+   </property>
+  </action>
+  <action name="actionheapSort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Heap Sort</string>
+   </property>
+  </action>
+  <action name="actionstableSort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Stable Sort</string>
    </property>
   </action>
  </widget>

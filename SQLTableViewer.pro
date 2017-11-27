@@ -39,3 +39,5 @@ HEADERS += \
 FORMS += \
         mainwindow.ui \
     dbconnection.ui
+
+QMAKE_CXXFLAGS += -std=gnu++11

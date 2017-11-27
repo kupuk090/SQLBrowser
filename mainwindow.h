@@ -12,6 +12,8 @@
 #include "dbconnection.h"
 
 
+enum SortingMethods { SQL, StandartModel, MyModel };
+
 namespace Ui {
 class MainWindow;
 }
@@ -32,20 +34,31 @@ private slots:
     void on_sectionClicked(int column);
     void on_actionHide_vertical_headers_triggered();
     void on_revertButton_clicked();
-    void on_stProxyModel_reset();
+    void on_actionQMap_triggered();
+    void on_actionquickSort_triggered();
+    void on_actionheapSort_triggered();
+    void on_actionstableSort_triggered();
 
 private:
+    QAction *firstAction;
+    QAction *secondAction;
+    QAction *thirdAction;
+    QAction *fourthAction;
+
     Ui::MainWindow *ui;
     QSqlDatabase *db;
     DBconnection *connection;
     QSqlQueryModel *model;
     QSortFilterProxyModel *stProxyModel;
     MySortFilterProxyModel *myProxyModel;
-    int choice;     // 0 - for SQL sorting, 1 - for QSortFilterProxyModel::sort(...), 2 - for modified sorting of proxy-model
+    SortingMethods choice;     // 0 - for SQL sorting, 1 - for QSortFilterProxyModel::sort(...), 2 - for modified sorting of proxy-model
+    MySortingMethods sortChoice;
     bool hideFlag;
 
 signals:
     void modelChanged();
+    void sortChoiceChanged(MySortingMethods ch);
+
 };
 
 #endif // MAINWINDOW_H
