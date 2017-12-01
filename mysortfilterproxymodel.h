@@ -2,15 +2,13 @@
 #define MYSORTFILTERPROXYMODEL_H
 
 #include <QVariant>
-#include <QHash>
-#include <QMultiHash>
 #include <QtSql/QtSql>
 #include <QtSql/QSqlQuery>
 #include <QSortFilterProxyModel>
 #include "sortings.h"
 
 
-enum MySortingMethods { QtMap, QuickSort, HeapSort, StableSort };
+enum MySortingMethods { QtMap, QuickSort, HeapSort, StableSort, SimpleSort, TimSort, ShellSort };
 
 class MySortFilterProxyModel : public QSortFilterProxyModel
 {

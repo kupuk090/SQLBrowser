@@ -78,6 +78,14 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
             stableSort(dataColumn);
             break;
 
+        case SimpleSort:
+            simpleSort(dataColumn);
+            break;
+
+        case TimSort:
+            timSort(dataColumn);
+            break;
+
         default:
             break;
     }

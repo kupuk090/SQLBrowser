@@ -35,16 +35,15 @@ private slots:
     void on_actionHide_vertical_headers_triggered();
     void on_revertButton_clicked();
     void on_actionQMap_triggered();
-    void on_actionquickSort_triggered();
-    void on_actionheapSort_triggered();
-    void on_actionstableSort_triggered();
+    void on_actionQuickSort_triggered();
+    void on_actionHeapSort_triggered();
+    void on_actionStableSort_triggered();
+    void on_actionSimpleSort_triggered();
+    void on_actionTimSort_triggered();
+
+    void on_actionShellSort_triggered();
 
 private:
-    QAction *firstAction;
-    QAction *secondAction;
-    QAction *thirdAction;
-    QAction *fourthAction;
-
     Ui::MainWindow *ui;
     QSqlDatabase *db;
     DBconnection *connection;

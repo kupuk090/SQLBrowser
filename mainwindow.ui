@@ -92,9 +92,11 @@
      <string>&amp;Sortings</string>
     </property>
     <addaction name="actionQMap"/>
-    <addaction name="actionquickSort"/>
-    <addaction name="actionheapSort"/>
-    <addaction name="actionstableSort"/>
+    <addaction name="actionQuickSort"/>
+    <addaction name="actionHeapSort"/>
+    <addaction name="actionStableSort"/>
+    <addaction name="actionSimpleSort"/>
+    <addaction name="actionTimSort"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuProperties"/>
@@ -136,7 +138,7 @@
     <string>QMap</string>
    </property>
   </action>
-  <action name="actionquickSort">
+  <action name="actionQuickSort">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -144,7 +146,7 @@
     <string>Quick Sort</string>
    </property>
   </action>
-  <action name="actionheapSort">
+  <action name="actionHeapSort">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -152,12 +154,28 @@
     <string>Heap Sort</string>
    </property>
   </action>
-  <action name="actionstableSort">
+  <action name="actionStableSort">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
     <string>Stable Sort</string>
+   </property>
+  </action>
+  <action name="actionSimpleSort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simple Sort</string>
+   </property>
+  </action>
+  <action name="actionTimSort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Tim Sort</string>
    </property>
   </action>
  </widget>

@@ -34,7 +34,8 @@ HEADERS += \
         mainwindow.h \
     dbconnection.h \
     mysortfilterproxymodel.h \
-    sortings.h
+    sortings.h \
+    timsort.hpp
 
 FORMS += \
         mainwindow.ui \

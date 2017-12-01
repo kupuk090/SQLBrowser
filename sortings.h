@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QVariant>
 #include <QtAlgorithms>
+#include "timsort.hpp"
 
 
 typedef struct MagicContainer
@@ -19,5 +20,8 @@ MagicContainer setData(MagicContainer cont);
 void quickSort(QVector<MagicContainer> *arr);
 void heapSort(QVector<MagicContainer> *arr);
 void stableSort(QVector<MagicContainer> *arr);
+void simpleSort(QVector<MagicContainer> *arr);
+void timSort(QVector<MagicContainer> *arr);
+
 
 #endif // SORTINGS_H

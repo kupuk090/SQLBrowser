@@ -43,6 +43,22 @@ void stableSort(QVector<MagicContainer> *arr)
     });
 }
 
+void simpleSort(QVector<MagicContainer> *arr)
+{
+    std::sort(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void timSort(QVector<MagicContainer> *arr)
+{
+    gfx::timsort(arr->begin(), arr->end(), [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
 QList<int> values(QVector<MagicContainer> cont)
 {
     QList<int> *tmp = new QList<int>();

@@ -31,9 +31,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QActionGroup *actionGroup = new QActionGroup(ui->menuSortings);
 
     actionGroup->addAction(ui->actionQMap);
-    actionGroup->addAction(ui->actionquickSort);
-    actionGroup->addAction(ui->actionheapSort);
-    actionGroup->addAction(ui->actionstableSort);
+    actionGroup->addAction(ui->actionQuickSort);
+    actionGroup->addAction(ui->actionHeapSort);
+    actionGroup->addAction(ui->actionStableSort);
+    actionGroup->addAction(ui->actionSimpleSort);
+    actionGroup->addAction(ui->actionTimSort);
     actionGroup->setExclusive(true);
     sortChoice = QtMap;
     emit sortChoiceChanged(sortChoice);
@@ -184,20 +186,32 @@ void MainWindow::on_actionQMap_triggered()
     emit sortChoiceChanged(sortChoice);
 }
 
-void MainWindow::on_actionquickSort_triggered()
+void MainWindow::on_actionQuickSort_triggered()
 {
     sortChoice = QuickSort;
     emit sortChoiceChanged(sortChoice);
 }
 
-void MainWindow::on_actionheapSort_triggered()
+void MainWindow::on_actionHeapSort_triggered()
 {
     sortChoice = HeapSort;
     emit sortChoiceChanged(sortChoice);
 }
 
-void MainWindow::on_actionstableSort_triggered()
+void MainWindow::on_actionStableSort_triggered()
 {
     sortChoice = StableSort;
+    emit sortChoiceChanged(sortChoice);
+}
+
+void MainWindow::on_actionSimpleSort_triggered()
+{
+    sortChoice = SimpleSort;
+    emit sortChoiceChanged(sortChoice);
+}
+
+void MainWindow::on_actionTimSort_triggered()
+{
+    sortChoice = TimSort;
     emit sortChoiceChanged(sortChoice);
 }
