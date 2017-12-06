@@ -18,6 +18,8 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     QTime timer;
     timer.start();
 
+
+    emit layoutAboutToBeChanged();
     switch (choice)
     {
         case QtMap:
@@ -28,6 +30,7 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
             magic(column, order);
             break;
     }
+    emit layoutChanged();
 }
 
 void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
@@ -46,6 +49,8 @@ void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
     *sortedList = sortedColumn->values();
     if (order == Qt::DescendingOrder)
         std::reverse(sortedList->begin(),sortedList->end());
+
+    delete sortedColumn;
 }
 
 void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
@@ -83,8 +88,51 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
             break;
 
         case TimSort:
-            timSort(dataColumn);
+        {
+            QFuture<void> future1 = QtConcurrent::run(timSort, dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2);
+            QFuture<void> future2 = QtConcurrent::run(timSort, dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end());
+            future1.waitForFinished();
+            future2.waitForFinished();
+            std::merge(dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2,
+                       dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end(), dataColumn->begin(),
+                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+                           {
+                               return a.m_key < b.m_key;
+                           });
+
+//            int size = dataColumn->size();
+//            QVector<MagicContainer>::Iterator begin = dataColumn->begin();
+//            QFuture<void> future1 = QtConcurrent::run(timSort, begin, begin + size/4);
+//            QFuture<void> future2 = QtConcurrent::run(timSort, begin + size/4 + 1, begin + size/2);
+//            QFuture<void> future3 = QtConcurrent::run(timSort, begin + size/2 + 1, begin + 3*size/4);
+//            QFuture<void> future4 = QtConcurrent::run(timSort, begin + 3*size/4 + 1, dataColumn->end());
+//            future1.waitForFinished();
+//            future2.waitForFinished();
+//            future3.waitForFinished();
+//            future4.waitForFinished();
+//            std::merge(begin, begin + size/4, begin + size/4 + 1, begin + size/2, dataColumn->begin(),
+//                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+//                           {
+//                               return a.m_key < b.m_key;
+//                           });
+//            std::merge(begin + size/2 + 1, begin + 3*size/4, begin + 3*size/4 + 1, dataColumn->end(), dataColumn->begin() + size/2 + 1,
+//                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+//                           {
+//                               return a.m_key < b.m_key;
+//                           });
+//            future1 = QtConcurrent::run(timSort, begin, begin + size/2);
+//            future2 = QtConcurrent::run(timSort, begin + size/2 + 1, dataColumn->end());
+//            future1.waitForFinished();
+//            future2.waitForFinished();
+//            std::merge(begin, begin + size/2, begin + size/2 + 1, dataColumn->end(), dataColumn->begin(),
+//                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+//                           {
+//                               return a.m_key < b.m_key;
+//                           });
+
+//            timSort(dataColumn);
             break;
+        }
 
         default:
             break;
@@ -93,6 +141,8 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
     *sortedList = values(*dataColumn);
     if (order == Qt::DescendingOrder)
         std::reverse(sortedList->begin(),sortedList->end());
+
+    delete dataColumn;
 }
 
 // вернуть индекс прокси модели который соответствует индексу исходной модели

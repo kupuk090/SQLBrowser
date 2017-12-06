@@ -5,6 +5,7 @@
 #include <QtSql/QtSql>
 #include <QtSql/QSqlQuery>
 #include <QSortFilterProxyModel>
+#include <QtConcurrent/QtConcurrent>
 #include "sortings.h"
 
 

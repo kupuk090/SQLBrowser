@@ -41,8 +41,6 @@ private slots:
     void on_actionSimpleSort_triggered();
     void on_actionTimSort_triggered();
 
-    void on_actionShellSort_triggered();
-
 private:
     Ui::MainWindow *ui;
     QSqlDatabase *db;

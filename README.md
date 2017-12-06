@@ -15,6 +15,12 @@ sort - посмотреть (можно записать свой алгорит
 придумать как засечь время для стандартной прокси-модели
 
 
+layoutAboutToBeChanged перед сортировкой и layoutChanged после
+https://code.woboq.org/qt5/qtbase/src/gui/itemmodels/qstandarditemmodel.cpp.html#_ZN20QStandardItemPrivate12sortChildrenEiN2Qt9SortOrderE глянуть реализацию
+// придумать как сбросить select с ячейки
+в стандартной модели попробвать засекать время в lessThan
+
+
 QMap:
 	Сортировка по столбцу "amount" в направлении 0 заняла:  2089 ms
 	Сортировка по столбцу "fare_conditions" в направлении 0 заняла:  4786 ms

@@ -23,5 +23,11 @@ void stableSort(QVector<MagicContainer> *arr);
 void simpleSort(QVector<MagicContainer> *arr);
 void timSort(QVector<MagicContainer> *arr);
 
+void quickSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+void heapSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+void stableSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+void simpleSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+void timSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+
 
 #endif // SORTINGS_H

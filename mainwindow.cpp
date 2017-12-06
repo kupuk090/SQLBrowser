@@ -5,8 +5,6 @@
 #include <QTime>
 
 //static const int THREAD_COUNT = QThread::idealThreadCount();
-QTime sortingTimer;
-int tmp = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -137,7 +135,6 @@ void MainWindow::on_sectionClicked(int column)
 {  
     QTime timer;
     timer.start();
-    sortingTimer.restart();
 
     switch (choice)
     {
@@ -148,14 +145,13 @@ void MainWindow::on_sectionClicked(int column)
             break;
 
         case StandartModel:
-            ui->tableView->sortByColumn(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
         case MyModel:
             myProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
-//            myProxyModel->invalidate();
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
@@ -164,7 +160,6 @@ void MainWindow::on_sectionClicked(int column)
             break;
     }
 
-    ui->tableView->reset();
     ui->tableView->verticalHeader()->reset();
 }
 

@@ -59,6 +59,50 @@ void timSort(QVector<MagicContainer> *arr)
     });
 }
 
+void quickSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end)
+{
+    qSort(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void heapSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end)
+{
+    std::make_heap(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+    std::sort_heap(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void stableSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end)
+{
+    std::stable_sort(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void simpleSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end)
+{
+    std::sort(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
+void timSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end)
+{
+    gfx::timsort(begin, end, [](const MagicContainer& a, const MagicContainer& b) -> bool
+    {
+        return a.m_key < b.m_key;
+    });
+}
+
 QList<int> values(QVector<MagicContainer> cont)
 {
     QList<int> *tmp = new QList<int>();
