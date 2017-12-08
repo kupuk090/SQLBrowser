@@ -89,16 +89,16 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
 
         case TimSort:
         {
-            QFuture<void> future1 = QtConcurrent::run(timSort, dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2);
-            QFuture<void> future2 = QtConcurrent::run(timSort, dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end());
-            future1.waitForFinished();
-            future2.waitForFinished();
-            std::merge(dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2,
-                       dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end(), dataColumn->begin(),
-                       [](const MagicContainer& a, const MagicContainer& b) -> bool
-                           {
-                               return a.m_key < b.m_key;
-                           });
+//            QFuture<void> future1 = QtConcurrent::run(timSort, dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2);
+//            QFuture<void> future2 = QtConcurrent::run(timSort, dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end());
+//            future1.waitForFinished();
+//            future2.waitForFinished();
+//            std::merge(dataColumn->begin(), dataColumn->begin() + dataColumn->size()/2,
+//                       dataColumn->begin() + dataColumn->size()/2 + 1, dataColumn->end(), dataColumn->begin(),
+//                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+//                           {
+//                               return a.m_key < b.m_key;
+//                           });
 
 //            int size = dataColumn->size();
 //            QVector<MagicContainer>::Iterator begin = dataColumn->begin();
@@ -129,6 +129,50 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
 //                           {
 //                               return a.m_key < b.m_key;
 //                           });
+
+            // более правильная версия
+            int size = dataColumn->size();
+            QVector<MagicContainer>::Iterator begin = dataColumn->begin();
+            QVector<MagicContainer> *tmp = new QVector<MagicContainer>();
+            qDebug() << begin->m_key;
+            qDebug() << (begin+1)->m_key;
+            QFuture<void> future1 = QtConcurrent::run(timSort, begin, begin + size/4);
+            QFuture<void> future2 = QtConcurrent::run(timSort, begin + size/4 + 1, begin + size/2);
+            QFuture<void> future3 = QtConcurrent::run(timSort, begin + size/2 + 1, begin + 3*size/4);
+            QFuture<void> future4 = QtConcurrent::run(timSort, begin + 3*size/4 + 1, dataColumn->end());
+            future1.waitForFinished();
+            future2.waitForFinished();
+            future3.waitForFinished();
+            future4.waitForFinished();
+            qDebug() << size/2;
+            tmp->fill(MagicContainer(), size/2);
+            std::merge(begin, begin + size/4, begin + size/4 + 1, begin + size/2, tmp->begin(),
+                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+                           {
+                               return a.m_key < b.m_key;
+                           });
+            std::copy(tmp->begin(), tmp->end(), begin);
+            tmp->clear();
+            tmp->fill(MagicContainer(), size/2);
+            std::merge(begin + size/2 + 1, begin + 3*size/4, begin + 3*size/4 + 1, dataColumn->end(), tmp->begin(),
+                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+                           {
+                               return a.m_key < b.m_key;
+                           });
+            std::copy(tmp->begin(), tmp->end(), begin + size/2 + 1);
+            tmp->clear();
+            future1 = QtConcurrent::run(timSort, begin, begin + size/2);
+            future2 = QtConcurrent::run(timSort, begin + size/2 + 1, dataColumn->end());
+            future1.waitForFinished();
+            future2.waitForFinished();
+            tmp->fill(MagicContainer(), size);
+            std::merge(begin, begin + size/2, begin + size/2 + 1, dataColumn->end(), tmp->begin(),
+                       [](const MagicContainer& a, const MagicContainer& b) -> bool
+                           {
+                               return a.m_key < b.m_key;
+                           });
+            std::copy(tmp->begin(), tmp->end(), begin);
+            delete tmp;
 
 //            timSort(dataColumn);
             break;

@@ -36,4 +36,5 @@ public slots:
     void giveSortChoice(MySortingMethods ch);
 };
 
+
 #endif // MYSORTFILTERPROXYMODEL_H
