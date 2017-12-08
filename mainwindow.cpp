@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSort->addItem("Sorting by modified ProxyModel function");
 
     model = new QSqlQueryModel(this);
-    stProxyModel = new QSortFilterProxyModel(this);
+//    stProxyModel = new QSortFilterProxyModel(this);
+    stProxyModel = new StProxyModel(this);
     myProxyModel = new MySortFilterProxyModel(this);
 
     // connections
@@ -146,6 +147,7 @@ void MainWindow::on_sectionClicked(int column)
 
         case StandartModel:
             stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            qDebug() << stProxyModel->m_time;
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;

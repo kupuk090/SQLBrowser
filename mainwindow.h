@@ -46,7 +46,8 @@ private:
     QSqlDatabase *db;
     DBconnection *connection;
     QSqlQueryModel *model;
-    QSortFilterProxyModel *stProxyModel;
+//    QSortFilterProxyModel *stProxyModel;
+    StProxyModel *stProxyModel;
     MySortFilterProxyModel *myProxyModel;
     SortingMethods choice;     // 0 - for SQL sorting, 1 - for QSortFilterProxyModel::sort(...), 2 - for modified sorting of proxy-model
     MySortingMethods sortChoice;

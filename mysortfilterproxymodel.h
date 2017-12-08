@@ -37,4 +37,15 @@ public slots:
 };
 
 
+class StProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+    mutable int m_time = 0;
+    StProxyModel(QObject *parent = 0);
+    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+};
+
+
 #endif // MYSORTFILTERPROXYMODEL_H
