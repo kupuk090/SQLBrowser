@@ -48,4 +48,12 @@ public:
 };
 
 
+void worker(QVector<Container> *arr,
+            void (*sortFunc)(QVector<Container>::Iterator, QVector<Container>::Iterator),
+            int threadCount = QThread::idealThreadCount());
+
+void myMerge(QVector<Container> *arr,
+             int count = (QThread::idealThreadCount() / 2));
+
+
 #endif // MYSORTFILTERPROXYMODEL_H

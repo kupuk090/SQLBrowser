@@ -148,6 +148,7 @@ void MainWindow::on_sectionClicked(int column)
         case StandartModel:
             stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
             qDebug() << stProxyModel->m_time;
+            stProxyModel->m_time = 0;
             qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;

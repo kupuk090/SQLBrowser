@@ -7,27 +7,30 @@
 #include "timsort.hpp"
 
 
-typedef struct MagicContainer
+typedef struct Container
 {
     QVariant m_key;
     int m_value;
-} MagicContainer;
+} Container;
 
-QList<int> values(QVector<MagicContainer> cont);
+// возвращает список значений QVector<MagicContainer> (в данном случае номера строк)
+QList<int> values(QVector<Container> cont);
 
-MagicContainer setData(QVariant key, int value);
-MagicContainer setData(MagicContainer cont);
-void quickSort(QVector<MagicContainer> *arr);
-void heapSort(QVector<MagicContainer> *arr);
-void stableSort(QVector<MagicContainer> *arr);
-void simpleSort(QVector<MagicContainer> *arr);
-void timSort(QVector<MagicContainer> *arr);
+// функции задающие значения структуры MagicContainer
+Container setData(QVariant key, int value);
+Container setData(Container cont);
 
-void quickSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
-void heapSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
-void stableSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
-void simpleSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
-void timSort(QVector<MagicContainer>::Iterator begin, QVector<MagicContainer>::Iterator end);
+// функции сортировки столбца
+void quickSort(QVector<Container> *arr);
+void heapSort(QVector<Container> *arr);
+void stableSort(QVector<Container> *arr);
+void simpleSort(QVector<Container> *arr);
+void timSort(QVector<Container> *arr);
+void quickSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
+void heapSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
+void stableSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
+void simpleSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
+void timSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
 
 
 #endif // SORTINGS_H
