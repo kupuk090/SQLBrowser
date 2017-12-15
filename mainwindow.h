@@ -12,7 +12,18 @@
 #include "dbconnection.h"
 
 
-enum SortingMethods { SQL, StandartModel, MyModel };
+enum SortingMethods { SQL, StandartModel, MyModel, OnlyModel };
+
+
+class OnlySqlModel : public QSqlQueryModel
+{
+    Q_OBJECT
+
+public:
+    OnlySqlModel(QObject *parent = 0);
+    void sort(int column, Qt::SortOrder order);
+};
+
 
 namespace Ui {
 class MainWindow;
@@ -45,11 +56,12 @@ private:
     Ui::MainWindow *ui;
     QSqlDatabase *db;
     DBconnection *connection;
-    QSqlQueryModel *model;
+//    QSqlQueryModel *model;
+    OnlySqlModel *model;
 //    QSortFilterProxyModel *stProxyModel;
     StProxyModel *stProxyModel;
     MySortFilterProxyModel *myProxyModel;
-    SortingMethods choice;     // 0 - for SQL sorting, 1 - for QSortFilterProxyModel::sort(...), 2 - for modified sorting of proxy-model
+    SortingMethods choice;
     MySortingMethods sortChoice;
     bool hideFlag;
 
@@ -58,5 +70,6 @@ signals:
     void sortChoiceChanged(MySortingMethods ch);
 
 };
+
 
 #endif // MAINWINDOW_H

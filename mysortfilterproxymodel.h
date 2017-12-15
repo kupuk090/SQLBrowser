@@ -21,6 +21,8 @@ public:
     void setSortedList(int column, Qt::SortOrder order);
     void sort(int column, Qt::SortOrder order);
     void magic(int column, Qt::SortOrder order);
+    void setPrevColumn(int value);
+    void setSorted(bool value);
 
 protected:
     QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;
@@ -30,6 +32,8 @@ protected:
 private:
     QList<int> *sortedList;
     MySortingMethods choice;
+    int prevColumn;
+    bool sorted;
 
 public slots:
     void revertList();

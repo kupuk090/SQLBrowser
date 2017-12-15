@@ -5,6 +5,8 @@
 
 MySortFilterProxyModel::MySortFilterProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
 {
+    prevColumn = -1;
+    sorted = false;
     sortedList = new QList<int>();
     connect(this, SIGNAL(modelReset()), this, SLOT(revertList()));
 }
@@ -18,19 +20,30 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     QTime timer;
     timer.start();
 
-
-    emit layoutAboutToBeChanged();
-    switch (choice)
+    if ((prevColumn >= 0) && (prevColumn == column))
     {
-        case QtMap:
-            setSortedList(column, order);
-            break;
-
-        default:
-            magic(column, order);
-            break;
+        emit layoutAboutToBeChanged();
+        if (!sorted)
+            std::reverse(sortedList->begin(),sortedList->end());
+        emit layoutChanged();
     }
-    emit layoutChanged();
+    else
+    {
+        emit layoutAboutToBeChanged();
+        switch (choice)
+        {
+            case QtMap:
+                setSortedList(column, order);
+                break;
+
+            default:
+                magic(column, order);
+                break;
+        }
+        emit layoutChanged();
+    }
+
+    sorted = true;
 }
 
 void MySortFilterProxyModel::setSortedList(int column, Qt::SortOrder order)
@@ -168,8 +181,19 @@ Qt::ItemFlags MySortFilterProxyModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
+void MySortFilterProxyModel::setSorted(bool value)
+{
+    sorted = value;
+}
+
+void MySortFilterProxyModel::setPrevColumn(int value)
+{
+    prevColumn = value;
+}
+
 void MySortFilterProxyModel::revertList()
 {
+    prevColumn = -1;
     sortedList->clear();
 }
 
@@ -222,52 +246,55 @@ void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterat
     delete futureMass;
 }
 
-//void myMerge(QVector<Container> *arr, int count)
-//{
-//    int step = count * 2;
-//    int size = arr->size();
+// не удавшаяся реализация многопоточного слияния массивов
+/*
+void myMerge(QVector<Container> *arr, int count)
+{
+    int step = count * 2;
+    int size = arr->size();
 
-//    if (count > 0)
-//    {
-//        QVector<Container> *tmp = new QVector<Container>();
-//        QVector< QFuture<void> > *futureMass = new QVector< QFuture<void> >();
+    if (count > 0)
+    {
+        QVector<Container> *tmp = new QVector<Container>();
+        QVector< QFuture<void> > *futureMass = new QVector< QFuture<void> >();
 
-//        tmp->fill(Container(), size);
-//        QVector<Container>::Iterator begin1 = arr->begin();
-//        QVector<Container>::Iterator end1 = begin1 + size/step + 1;
-//        QVector<Container>::Iterator begin2 = end1;
-//        QVector<Container>::Iterator end2 = begin2 + size/step;
-//        QVector<Container>::Iterator tmpIt = tmp->begin();
+        tmp->fill(Container(), size);
+        QVector<Container>::Iterator begin1 = arr->begin();
+        QVector<Container>::Iterator end1 = begin1 + size/step + 1;
+        QVector<Container>::Iterator begin2 = end1;
+        QVector<Container>::Iterator end2 = begin2 + size/step;
+        QVector<Container>::Iterator tmpIt = tmp->begin();
 
-//        for (auto i = 0; i < count; i++)
-//        {
-//            QFuture<void> future = QtConcurrent::run(std::merge, begin1, end1, begin2, end2, tmpIt,
-//                                                     [](const Container& a, const Container& b) -> bool
-//                                                                        {
-//                                                                            return a.m_key < b.m_key;
-//                                                                        });
-//            begin1 = end2;
-//            end1 = begin1 + size/step;
-//            begin2 = end1;
-//            end2 = begin2 + size/step;
-//            if (i)
-//                tmpIt += count;
-//            else
-//                tmpIt += count + 1;
-//            futureMass->append(future);
-//        }
-//        for (auto i = 0; i < count; i++)
-//        {
-//            futureMass->value(i).waitForFinished();
-//        }
+        for (auto i = 0; i < count; i++)
+        {
+            QFuture<void> future = QtConcurrent::run(std::merge, begin1, end1, begin2, end2, tmpIt,
+                                                     [](const Container& a, const Container& b) -> bool
+                                                                        {
+                                                                            return a.m_key < b.m_key;
+                                                                        });
+            begin1 = end2;
+            end1 = begin1 + size/step;
+            begin2 = end1;
+            end2 = begin2 + size/step;
+            if (i)
+                tmpIt += count;
+            else
+                tmpIt += count + 1;
+            futureMass->append(future);
+        }
+        for (auto i = 0; i < count; i++)
+        {
+            futureMass->value(i).waitForFinished();
+        }
 
-//        std::copy(tmp->begin(), tmp->end(), arr->begin());
-//        delete[] futureMass;
-//        delete tmp;
+        std::copy(tmp->begin(), tmp->end(), arr->begin());
+        delete[] futureMass;
+        delete tmp;
 
-//        myMerge(arr, (count / 2));
-//    }
-//}
+        myMerge(arr, (count / 2));
+    }
+}
+*/
 
 void myMerge(QVector<Container> *arr, int count)
 {
