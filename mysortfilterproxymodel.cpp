@@ -127,7 +127,8 @@ void MySortFilterProxyModel::magic(int column, Qt::SortOrder order)
         case TimSort:
         {
             void (*timSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &timSort;
-            worker(dataColumn, timSortPtr, QThread::idealThreadCount());
+//            worker(dataColumn, timSortPtr, QThread::idealThreadCount());
+            worker(dataColumn, timSortPtr, 8);
 
 //            timSort(dataColumn);
 
@@ -225,7 +226,7 @@ bool StProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) c
 void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterator, QVector<Container>::Iterator), int threadCount)
 {
     int size = arr->size();
-    QVector< QFuture<void> > *futureMass = new QVector< QFuture<void> >();
+    QVector< QFuture<void> > futureMass;
 
     QVector<Container>::Iterator begin = arr->begin();
     QVector<Container>::Iterator end = begin + size/threadCount + 1;
@@ -234,20 +235,18 @@ void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterat
         QFuture<void> future = QtConcurrent::run(sortFunc, begin, end);
         begin = end;
         end = begin + size/threadCount;
-        futureMass->append(future);
+        futureMass.append(future);
     }
     for (auto i = 0; i < threadCount; i++)
     {
-        futureMass->value(i).waitForFinished();
+        futureMass.value(i).waitForFinished();
     }
 
     myMerge(arr, (threadCount / 2));
-
-    delete futureMass;
 }
 
 // не удавшаяся реализация многопоточного слияния массивов
-/*
+
 void myMerge(QVector<Container> *arr, int count)
 {
     int step = count * 2;
@@ -255,23 +254,28 @@ void myMerge(QVector<Container> *arr, int count)
 
     if (count > 0)
     {
-        QVector<Container> *tmp = new QVector<Container>();
-        QVector< QFuture<void> > *futureMass = new QVector< QFuture<void> >();
+        QVector<Container> tmp = QVector<Container>();
+        QVector< QFuture<void> > futureMass = QVector< QFuture<void> >();
 
-        tmp->fill(Container(), size);
+        tmp.fill(Container(), size);
         QVector<Container>::Iterator begin1 = arr->begin();
         QVector<Container>::Iterator end1 = begin1 + size/step + 1;
         QVector<Container>::Iterator begin2 = end1;
         QVector<Container>::Iterator end2 = begin2 + size/step;
-        QVector<Container>::Iterator tmpIt = tmp->begin();
+        QVector<Container>::Iterator tmpIt = tmp.begin();
 
         for (auto i = 0; i < count; i++)
         {
             QFuture<void> future = QtConcurrent::run(std::merge, begin1, end1, begin2, end2, tmpIt,
                                                      [](const Container& a, const Container& b) -> bool
-                                                                        {
-                                                                            return a.m_key < b.m_key;
-                                                                        });
+                                                     {
+                                                         return a.m_key < b.m_key;
+                                                     });
+            if (i)
+                tmpIt += size/count;
+            else
+                tmpIt += size/count + 1;
+
             begin1 = end2;
             end1 = begin1 + size/step;
             begin2 = end1;
@@ -280,58 +284,52 @@ void myMerge(QVector<Container> *arr, int count)
                 tmpIt += count;
             else
                 tmpIt += count + 1;
-            futureMass->append(future);
+            futureMass.append(future);
         }
         for (auto i = 0; i < count; i++)
         {
-            futureMass->value(i).waitForFinished();
+            futureMass.value(i).waitForFinished();
         }
 
-        std::copy(tmp->begin(), tmp->end(), arr->begin());
-        delete[] futureMass;
-        delete tmp;
+        std::copy(tmp.begin(), tmp.end(), arr->begin());
 
         myMerge(arr, (count / 2));
     }
 }
-*/
 
-void myMerge(QVector<Container> *arr, int count)
-{
-    int step = count * 2;
-    int size = arr->size();
 
-    if (count > 0)
-    {
-        QVector<Container> *tmp = new QVector<Container>();
+//void myMerge(QVector<Container> *arr, int count)
+//{
+//    int step = count * 2;
+//    int size = arr->size();
 
-        tmp->fill(Container(), size);
-        QVector<Container>::Iterator begin1 = arr->begin();
-        QVector<Container>::Iterator end1 = begin1 + size/step + 1;
-        QVector<Container>::Iterator begin2 = end1;
-        QVector<Container>::Iterator end2 = begin2 + size/step;
-        QVector<Container>::Iterator tmpIt = tmp->begin();
+//    if (count > 0)
+//    {
+//        QVector<Container> tmp;
 
-        for (auto i = 0; i < count; i++)
-        {
-            std::merge(begin1, end1, begin2, end2, tmpIt,
-                    [](const Container& a, const Container& b) -> bool
-                    {
-                        return a.m_key < b.m_key;
-                    });
-            begin1 = end2;
-            end1 = begin1 + size/step;
-            begin2 = end1;
-            end2 = begin2 + size/step;
-            if (i)
-                tmpIt += step;
-            else
-                tmpIt += step + 1;
-        }
+//        tmp.fill(Container(), size);
+//        QVector<Container>::Iterator begin1 = arr->begin();
+//        QVector<Container>::Iterator end1 = begin1 + size/step + 1;
+//        QVector<Container>::Iterator begin2 = end1;
+//        QVector<Container>::Iterator end2 = begin2 + size/step;
+//        QVector<Container>::Iterator tmpIt = tmp.begin();
 
-        std::copy(tmp->begin(), tmp->end(), arr->begin());
-        delete tmp;
+//        for (auto i = 0; i < count; i++)
+//        {
+//            tmpIt = std::merge(begin1, end1, begin2, end2, tmpIt,
+//                    [](const Container& a, const Container& b) -> bool
+//                    {
+//                        return a.m_key < b.m_key;
+//                    });
 
-        myMerge(arr, (count / 2));
-    }
-}
+//            begin1 = end2;
+//            end1 = begin1 + size/step;
+//            begin2 = end1;
+//            end2 = begin2 + size/step;
+//        }
+
+//        std::copy(tmp.begin(), tmp.end(), arr->begin());
+
+//        myMerge(arr, (count / 2));
+//    }
+//}

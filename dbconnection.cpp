@@ -4,11 +4,12 @@
 
 DBconnection::DBconnection(QDialog *parent) :
     QDialog(parent),
-    ui(new Ui::DBconnection)
+    ui(new Ui::DBconnection),
+    db(new QSqlDatabase)
 {
     ui->setupUi(this);
 
-    db = new QSqlDatabase();
+//    db = new QSqlDatabase();
     QStringList drivers = QSqlDatabase::drivers();
     ui->comboBox->addItems(drivers);
     ui->comboBox->setCurrentText("QPSQL");
