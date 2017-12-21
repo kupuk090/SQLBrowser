@@ -9,7 +9,6 @@ DBconnection::DBconnection(QDialog *parent) :
 {
     ui->setupUi(this);
 
-//    db = new QSqlDatabase();
     QStringList drivers = QSqlDatabase::drivers();
     ui->comboBox->addItems(drivers);
     ui->comboBox->setCurrentText("QPSQL");
@@ -83,6 +82,7 @@ void DBconnection::on_clearButton_clicked()
     ui->editPassword->clear();
     ui->editUser->clear();
     ui->editPort->setValue(defaultPort(ui->comboBox->currentText()));
+    ui->checkBox->setChecked(false);
 
     return;
 }

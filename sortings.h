@@ -16,10 +16,6 @@ typedef struct Container
 // возвращает список значений QVector<MagicContainer> (в данном случае номера строк)
 QList<int> values(QVector<Container> cont);
 
-// функции задающие значения структуры MagicContainer
-Container setData(QVariant key, int value);
-Container setData(Container cont);
-
 // функции сортировки столбца
 void quickSort(QVector<Container> *arr);
 void heapSort(QVector<Container> *arr);

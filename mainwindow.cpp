@@ -7,7 +7,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    model(this), stProxyModel(this), myProxyModel(this)
 {
     ui->setupUi(this);
 
@@ -15,17 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSort->addItem("Sorting by SQL function");
     ui->comboSort->addItem("Sorting by standart ProxyModel function");
     ui->comboSort->addItem("Sorting by modified ProxyModel function");
-    ui->comboSort->addItem("Sorting by model function");
-
-//    model = new QSqlQueryModel(this);
-    model = new OnlySqlModel(this);
-//    stProxyModel = new QSortFilterProxyModel(this);
-    stProxyModel = new StProxyModel(this);
-    myProxyModel = new MySortFilterProxyModel(this);
+//    ui->comboSort->addItem("Sorting by model function");
 
     // connections
     connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(on_sectionClicked(int)));
-    connect(this, SIGNAL(sortChoiceChanged(MySortingMethods)), myProxyModel, SLOT(giveSortChoice(MySortingMethods)));
+    connect(this, SIGNAL(sortChoiceChanged(MySortingMethods)), &myProxyModel, SLOT(giveSortChoice(MySortingMethods)));
 
     // actionGroup in menu
     QActionGroup *actionGroup = new QActionGroup(ui->menuSortings);
@@ -49,13 +44,114 @@ MainWindow::~MainWindow()
 
 void MainWindow::sortBySQL(int column)
 {
-    QString columnName = model->record().fieldName(column);
-    QString lastQueryText = model->query().lastQuery() + " ORDER BY ";
+    QString columnName = model.record().fieldName(column);
+    QString lastQueryText = model.query().lastQuery() + " ORDER BY ";
     QString queryText = lastQueryText.remove(lastQueryText.indexOf(" ORDER BY "),lastQueryText.length()-lastQueryText.indexOf(" ORDER BY "));
 
-    model->setQuery(queryText + QString(" ORDER BY %1 %2").arg(columnName)
+    model.setQuery(queryText + QString(" ORDER BY %1 %2").arg(columnName)
                     .arg(ui->tableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder?"ASC":"DESC"));
 
+}
+
+void MainWindow::testFunc(const QSqlQueryModel &model)
+{
+    QFile file("resSQL.csv");
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    QTime timer;
+    QTimer sleeper;
+
+    out << "SQL sorting" << "\n";
+    for (auto i = 0; i<model.columnCount(); i++)
+    {
+        out << model.data(model.index(1,i)).typeName() << "\t";
+        for (auto j = 0; j<10; j++)
+        {
+            timer.restart();
+            sortBySQL(i);
+            out << timer.elapsed() << "\t";
+            sleeper.start(1000);
+            qDebug() << i << " " << j;
+        }
+        out << "\n";
+    }
+    qDebug() << "end";
+    file.close();
+}
+
+void MainWindow::testFunc(StProxyModel *model)
+{
+    QFile file("resSTD.csv");
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    QTimer sleeper;
+
+    out << "StProxyModel" << "\n";
+    for (auto i = 0; i<model->sourceModel()->columnCount(); i++)
+    {
+        Qt::SortOrder role = Qt::SortOrder::AscendingOrder;
+        out << model->sourceModel()->data(model->sourceModel()->index(1,i)).typeName() << "\t";
+        for (auto j = 0; j<10; j++)
+        {
+            model->m_time = 0;
+            (role == Qt::SortOrder::AscendingOrder) ? role = Qt::SortOrder::DescendingOrder : role = Qt::SortOrder::AscendingOrder;
+            model->sort(i, role);
+            out << model->m_time << "\t";
+            sleeper.start(1000);
+            qDebug() << i << " " << j;
+        }
+        out << "\n";
+    }
+    qDebug() << "end";
+    file.close();
+}
+
+void MainWindow::testFunc(MySortFilterProxyModel *model)
+{
+    QFile file("resMY.csv");
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    QTime timer;
+    QTimer sleeper;
+
+    out << "MyProxyModel" << "\t";
+    switch(sortChoice)
+    {
+        case QtMap:
+            out << "QMap" << "\n";
+            break;
+
+        case QuickSort:
+            out << "QuickSort" << "\n";
+            break;
+
+        case HeapSort:
+            out << "HeapSort" << "\n";
+            break;
+
+        case StableSort:
+            out << "StableSort" << "\n";
+            break;
+
+        case TimSort:
+            out << "TimSort" << "\n";
+            break;
+    }
+    for (auto i = 0; i<model->sourceModel()->columnCount(); i++)
+    {
+        out << model->sourceModel()->data(model->sourceModel()->index(1,i)).typeName() << "\t";
+        for (auto j = 0; j<10; j++)
+        {
+            timer.restart();
+            model->sort(i, Qt::SortOrder::AscendingOrder);
+            out << timer.elapsed() << "\t";
+            sleeper.start(1000);
+            qDebug() << i << " " << j;
+        }
+        out << "\n";
+    }
+    qDebug() << "end";
+    file.close();
 }
 
 void MainWindow::on_submitButton_clicked()
@@ -66,30 +162,29 @@ void MainWindow::on_submitButton_clicked()
     timer.start();
 
     if (boxText != "test")
-        model->setQuery("SELECT * FROM " + boxText);
+        model.setQuery("SELECT * FROM " + boxText);
     else
-        model->setQuery("SELECT * FROM bookings.flights_v");
+        model.setQuery("SELECT * FROM bookings.flights_v");
 
     choice = static_cast<SortingMethods>(ui->comboSort->currentIndex());
     switch (choice)
     {
         case SQL:
-            ui->tableView->setModel(model);
+            ui->tableView->setModel(&model);
+//            testFunc(model);
             break;
 
         case StandartModel:
-            stProxyModel->setSourceModel(model);
-            ui->tableView->setModel(stProxyModel);
-            stProxyModel->m_time = 0;
+            stProxyModel.setSourceModel(&model);
+            ui->tableView->setModel(&stProxyModel);
+            stProxyModel.m_time = 0;
+//            testFunc(&stProxyModel);
             break;
 
         case MyModel:
-            myProxyModel->setSourceModel(model);
-            ui->tableView->setModel(myProxyModel);
-            break;
-
-        case OnlyModel:
-            ui->tableView->setModel(model);
+            myProxyModel.setSourceModel(&model);
+            ui->tableView->setModel(&myProxyModel);
+//            testFunc(&myProxyModel);
             break;
 
         default:
@@ -102,8 +197,9 @@ void MainWindow::on_submitButton_clicked()
 
 void MainWindow::on_actionAdd_Connection_triggered()
 {
-    connection = new DBconnection();
+    connection = new DBconnection();  
     connect(connection, SIGNAL(dbCorrectlyOpen(QSqlDatabase*)), this, SLOT(getOpenedDatabase(QSqlDatabase*)));
+
 
     if (connection)
     {
@@ -147,22 +243,22 @@ void MainWindow::on_sectionClicked(int column)
     {
         case SQL:
             sortBySQL(column);
-            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+            qDebug() << "Сортировка по столбцу" << model.headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
         case StandartModel:
-            stProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
-            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
-                        ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << stProxyModel->m_time << "ms";
-            stProxyModel->m_time = 0;
+            stProxyModel.sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            qDebug() << "Сортировка по столбцу" << model.headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+                        ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << stProxyModel.m_time << "ms";
+            stProxyModel.m_time = 0;
             break;
 
         case MyModel:
-            myProxyModel->sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
-            myProxyModel->setPrevColumn(column);
-            myProxyModel->setSorted(false);
-            qDebug() << "Сортировка по столбцу" << model->headerData(column, Qt::Horizontal).toString() << "в направлении" <<
+            myProxyModel.sort(column, ui->tableView->horizontalHeader()->sortIndicatorOrder());
+            myProxyModel.setPrevColumn(column);
+            myProxyModel.setSorted(false);
+            qDebug() << "Сортировка по столбцу" << model.headerData(column, Qt::Horizontal).toString() << "в направлении" <<
                         ui->tableView->horizontalHeader()->sortIndicatorOrder() << "заняла: " << timer.elapsed() << "ms";
             break;
 
@@ -181,7 +277,7 @@ void MainWindow::on_actionHide_vertical_headers_triggered()
 
 void MainWindow::on_revertButton_clicked()
 {
-    model->clear();
+    model.clear();
     ui->tableView->setModel(NULL);
 }
 
@@ -221,16 +317,3 @@ void MainWindow::on_actionTimSort_triggered()
     emit sortChoiceChanged(sortChoice);
 }
 
-
-
-
-OnlySqlModel::OnlySqlModel(QObject *parent) : QSqlQueryModel(parent)
-{
-}
-
-void OnlySqlModel::sort(int column, Qt::SortOrder order)
-{
-    // чёт вообще ничего в голову не лезет
-    // свои сортировки применить не могу сюда, т.к. принцип их работы в прокси модели совсем другой
-    // в SQL запросе смысла не вижу
-}

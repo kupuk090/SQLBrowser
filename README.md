@@ -9,7 +9,6 @@ sort - посмотреть (можно записать свой алгорит
 
 
 https://code.woboq.org/qt5/qtbase/src/gui/itemmodels/qstandarditemmodel.cpp.html#_ZN20QStandardItemPrivate12sortChildrenEiN2Qt9SortOrderE глянуть реализацию
-+- попробовать ревёрсить столбец при втором нажатии на заголовок
 - РЕАЛИЗОВАТЬ СОРТИРОВКУ НА УРОВНЕ САМОЙ МОДЕЛИ (попробовать копирнуть реализаци у ссылки выше)
 ЗАСЕЧЬ ВРЕМЯ НА РАЗНЫХ ВХОДНЫХ УСЛОВИЯХ
 

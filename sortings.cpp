@@ -1,20 +1,5 @@
 #include "sortings.h"
 
-Container setData(QVariant key, int value)
-{
-    Container tmp;
-
-    tmp.m_key = key;
-    tmp.m_value = value;
-
-    return tmp;
-}
-
-Container setData(Container cont)
-{
-    return setData(cont.m_key, cont.m_value);
-}
-
 void quickSort(QVector<Container> *arr)
 {
     qSort(arr->begin(), arr->end(), [](const Container& a, const Container& b) -> bool
@@ -105,10 +90,10 @@ void timSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator en
 
 QList<int> values(QVector<Container> cont)
 {
-    QList<int> *tmp = new QList<int>();
+    QList<int> tmp = QList<int>();
 
     for (auto& i : cont)
-        tmp->append(i.m_value);
+        tmp.append(i.m_value);
 
-    return *tmp;
+    return tmp;
 }
