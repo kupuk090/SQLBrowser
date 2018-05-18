@@ -18,9 +18,6 @@ MySortFilterProxyModel::~MySortFilterProxyModel()
 
 void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
 {
-    QTime timer;
-    timer.start();
-
     if ((prevColumn >= 0) && (prevColumn == column))
     {
         emit layoutAboutToBeChanged();
@@ -31,38 +28,11 @@ void MySortFilterProxyModel::sort(int column, Qt::SortOrder order)
     else
     {
         emit layoutAboutToBeChanged();
-        switch (choice)
-        {
-            case QtMap:
-                sortByQMap(column, order);
-                break;
-
-            default:
-                sortWithFunc(column, order);
-                break;
-        }
+        sortWithFunc(column, order);
         emit layoutChanged();
     }
 
     sorted = true;
-}
-
-void MySortFilterProxyModel::sortByQMap(int column, Qt::SortOrder order)
-{
-    QMultiMap<QVariant, int> sortedColumn = QMultiMap<QVariant, int>();
-    QVariant currentValue;
-    int currentRow;
-
-    for (int i=0; i<sourceModel()->rowCount(); i++)
-    {
-        currentValue = sourceModel()->data(sourceModel()->index(i,column));
-        currentRow = i;
-        sortedColumn.insert(currentValue, currentRow);
-    }
-
-    *sortedList = sortedColumn.values();
-    if (order == Qt::DescendingOrder)
-        std::reverse(sortedList->begin(),sortedList->end());
 }
 
 void MySortFilterProxyModel::sortWithFunc(int column, Qt::SortOrder order)
@@ -83,53 +53,17 @@ void MySortFilterProxyModel::sortWithFunc(int column, Qt::SortOrder order)
 
     switch (choice)
     {
-        case QuickSort:
-        {
-//            void (*quickSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &quickSort;
-//            worker(&dataColumn, quickSortPtr, QThread::idealThreadCount());
-
-            quickSort(&dataColumn);
-
-            break;
-        }
-
-        case HeapSort:
-        {
-//            void (*heapSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &heapSort;
-//            worker(&dataColumn, heapSortPtr, QThread::idealThreadCount());
-
-            heapSort(&dataColumn);
-
-            break;
-        }
-
         case StableSort:
         {
-//            void (*stableSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &stableSort;
-//            worker(&dataColumn, stableSortPtr, QThread::idealThreadCount());
-
-            stableSort(&dataColumn);
-
-            break;
-        }
-
-        case SimpleSort:
-        {
-//            void (*simpleSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &simpleSort;
-//            worker(&dataColumn, simpleSortPtr, QThread::idealThreadCount());
-
-            simpleSort(&dataColumn);
-
+            void (*stableSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &stableSort;
+            worker(&dataColumn, stableSortPtr, QThread::idealThreadCount());
             break;
         }
 
         case TimSort:
         {
-//            void (*timSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &timSort;
-//            worker(&dataColumn, timSortPtr, QThread::idealThreadCount());
-
-            timSort(&dataColumn);
-
+            void (*timSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &timSort;
+            worker(&dataColumn, timSortPtr, QThread::idealThreadCount());
             break;
         }
 
@@ -139,7 +73,7 @@ void MySortFilterProxyModel::sortWithFunc(int column, Qt::SortOrder order)
 
     *sortedList = values(dataColumn);
     if (order == Qt::DescendingOrder)
-        std::reverse(sortedList->begin(),sortedList->end());
+        std::reverse(sortedList->begin(), sortedList->end());
 }
 
 // вернуть индекс прокси модели который соответствует индексу исходной модели
@@ -201,24 +135,6 @@ void MySortFilterProxyModel::giveSortChoice(MySortingMethods ch)
 
 
 
-
-QTime stTimer;
-StProxyModel::StProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
-{
-}
-
-bool StProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    stTimer.restart();
-
-    bool res = QSortFilterProxyModel::lessThan(left, right);
-    m_time += stTimer.elapsed();
-
-    return res;
-}
-
-
-
 void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterator, QVector<Container>::Iterator), int threadCount)
 {
     int size = arr->size();
@@ -240,59 +156,6 @@ void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterat
 
     myMerge(arr, (threadCount / 2));
 }
-
-// не удавшаяся реализация многопоточного слияния массивов
-/*
-void myMerge(QVector<Container> *arr, int count)
-{
-    int step = count * 2;
-    int size = arr->size();
-
-    if (count > 0)
-    {
-        QVector<Container> tmp = QVector<Container>();
-        QVector< QFuture<void> > futureMass = QVector< QFuture<void> >();
-
-        tmp.fill(Container(), size);
-        QVector<Container>::Iterator begin1 = arr->begin();
-        QVector<Container>::Iterator end1 = begin1 + size/step + 1;
-        QVector<Container>::Iterator begin2 = end1;
-        QVector<Container>::Iterator end2 = begin2 + size/step;
-        QVector<Container>::Iterator tmpIt = tmp.begin();
-
-        for (auto i = 0; i < count; i++)
-        {
-            QFuture<void> future = QtConcurrent::run(std::merge, begin1, end1, begin2, end2, tmpIt,
-                                                     [](const Container& a, const Container& b) -> bool
-                                                     {
-                                                         return a.m_key < b.m_key;
-                                                     });
-            if (i)
-                tmpIt += size/count;
-            else
-                tmpIt += size/count + 1;
-
-            begin1 = end2;
-            end1 = begin1 + size/step;
-            begin2 = end1;
-            end2 = begin2 + size/step;
-            if (i)
-                tmpIt += count;
-            else
-                tmpIt += count + 1;
-            futureMass.append(future);
-        }
-        for (auto i = 0; i < count; i++)
-        {
-            futureMass.value(i).waitForFinished();
-        }
-
-        std::copy(tmp.begin(), tmp.end(), arr->begin());
-
-        myMerge(arr, (count / 2));
-    }
-}
-*/
 
 void myMerge(QVector<Container> *arr, int count)
 {
@@ -325,6 +188,7 @@ void myMerge(QVector<Container> *arr, int count)
         }
 
         std::copy(tmp.begin(), tmp.end(), arr->begin());
+        qDebug() << arr->at(0).m_key;
 
         myMerge(arr, (count / 2));
     }

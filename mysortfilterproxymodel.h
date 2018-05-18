@@ -9,7 +9,7 @@
 #include "sortings.h"
 
 
-enum MySortingMethods { QtMap, QuickSort, HeapSort, StableSort, SimpleSort, TimSort };
+enum MySortingMethods { StableSort, TimSort };
 
 class MySortFilterProxyModel : public QSortFilterProxyModel
 {
@@ -18,7 +18,6 @@ class MySortFilterProxyModel : public QSortFilterProxyModel
 public:
     MySortFilterProxyModel(QObject *parent = 0);
     ~MySortFilterProxyModel();
-    void sortByQMap(int column, Qt::SortOrder order);
     void sort(int column, Qt::SortOrder order);
     void sortWithFunc(int column, Qt::SortOrder order);
     void setPrevColumn(int value);
@@ -38,17 +37,6 @@ private:
 public slots:
     void revertList();
     void giveSortChoice(MySortingMethods ch);
-};
-
-
-class StProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-
-public:
-    mutable int m_time = 0;
-    StProxyModel(QObject *parent = 0);
-    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 };
 
 
