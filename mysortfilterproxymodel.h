@@ -9,7 +9,6 @@
 #include "sortings.h"
 
 
-enum MySortingMethods { StableSort, TimSort };
 
 class MySortFilterProxyModel : public QSortFilterProxyModel
 {
@@ -30,13 +29,11 @@ protected:
 
 private:
     QList<int> *sortedList;
-    MySortingMethods choice;
     int prevColumn;
     bool sorted;
 
 public slots:
     void revertList();
-    void giveSortChoice(MySortingMethods ch);
 };
 
 

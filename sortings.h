@@ -17,9 +17,7 @@ typedef struct Container
 QList<int> values(QVector<Container> cont);
 
 // функции сортировки столбца
-void stableSort(QVector<Container> *arr);
 void timSort(QVector<Container> *arr);
-void stableSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
 void timSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end);
 
 

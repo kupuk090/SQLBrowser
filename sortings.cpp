@@ -1,24 +1,9 @@
 #include "sortings.h"
 
-void stableSort(QVector<Container> *arr)
-{
-    std::stable_sort(arr->begin(), arr->end(), [](const Container& a, const Container& b) -> bool
-    {
-        return a.m_key < b.m_key;
-    });
-}
 
 void timSort(QVector<Container> *arr)
 {
     gfx::timsort(arr->begin(), arr->end(), [](const Container& a, const Container& b) -> bool
-    {
-        return a.m_key < b.m_key;
-    });
-}
-
-void stableSort(QVector<Container>::Iterator begin, QVector<Container>::Iterator end)
-{
-    std::stable_sort(begin, end, [](const Container& a, const Container& b) -> bool
     {
         return a.m_key < b.m_key;
     });

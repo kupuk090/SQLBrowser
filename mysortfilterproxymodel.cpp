@@ -51,25 +51,8 @@ void MySortFilterProxyModel::sortWithFunc(int column, Qt::SortOrder order)
         dataColumn.append(currentItem);
     }
 
-    switch (choice)
-    {
-        case StableSort:
-        {
-            void (*stableSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &stableSort;
-            worker(&dataColumn, stableSortPtr, QThread::idealThreadCount());
-            break;
-        }
-
-        case TimSort:
-        {
-            void (*timSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &timSort;
-            worker(&dataColumn, timSortPtr, QThread::idealThreadCount());
-            break;
-        }
-
-        default:
-            break;
-    }
+    void (*timSortPtr) (QVector<Container>::Iterator, QVector<Container>::Iterator) = &timSort;
+    worker(&dataColumn, timSortPtr, QThread::idealThreadCount());
 
     *sortedList = values(dataColumn);
     if (order == Qt::DescendingOrder)
@@ -128,11 +111,6 @@ void MySortFilterProxyModel::revertList()
     sortedList->clear();
 }
 
-void MySortFilterProxyModel::giveSortChoice(MySortingMethods ch)
-{
-    choice = ch;
-}
-
 
 
 void worker(QVector<Container> *arr, void (*sortFunc)(QVector<Container>::Iterator, QVector<Container>::Iterator), int threadCount)
@@ -188,7 +166,6 @@ void myMerge(QVector<Container> *arr, int count)
         }
 
         std::copy(tmp.begin(), tmp.end(), arr->begin());
-        qDebug() << arr->at(0).m_key;
 
         myMerge(arr, (count / 2));
     }
